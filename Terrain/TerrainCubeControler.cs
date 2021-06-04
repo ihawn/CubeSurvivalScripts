@@ -1,0 +1,73 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class TerrainCubeControler : MonoBehaviour
+{
+    Vector3 startPos;
+    public TerrainControl theTerrainController;
+    Coroutine upCo, downCo;
+    public bool generationDone;
+
+    private void Awake()
+    {
+        startPos = transform.position;
+
+        if (gameObject.tag == "Ground")
+            generationDone = false;
+        else
+            generationDone = true;
+    }
+
+    private void OnEnable()
+    {
+        if (downCo != null)
+            StopCoroutine(downCo);
+
+        upCo = StartCoroutine(MoveToPosition());   
+    }
+
+
+    private void Update()
+    {
+        if (/*theTerrainController.doneGenerating &&*/ generationDone &&
+            BirdsEyeDistance(theTerrainController.player, gameObject) > theTerrainController.terrainDrawDistance && 
+            Vector3.Distance(transform.position, startPos) < 0.001f)
+        {
+            if (upCo != null)
+                StopCoroutine(upCo);
+
+            downCo = StartCoroutine(MoveDown());
+        }
+    }
+
+    float BirdsEyeDistance(GameObject p, GameObject c)
+    {
+        return Vector2.Distance(new Vector2(p.transform.position.x, p.transform.position.z), new Vector2(c.transform.position.x, c.transform.position.z));
+    }
+
+    IEnumerator MoveToPosition()
+    {
+        while(Vector3.Distance(startPos, transform.position) > 0.001f)
+        {
+            transform.position = Vector3.Lerp(transform.position, startPos, Time.deltaTime * theTerrainController.terrainRiseSpeed);
+            yield return null;
+        }
+
+        transform.position = startPos;
+    }
+
+    IEnumerator MoveDown()
+    {
+        Vector3 pos = startPos - new Vector3(0f, theTerrainController.verticalOffset, 0f);
+
+        while (Vector3.Distance(pos, transform.position) > 1f)
+        {
+            transform.position = Vector3.Lerp(transform.position, pos, theTerrainController.terrainRiseSpeed * Time.deltaTime);
+            yield return null;
+        }
+
+        transform.position = pos;
+        gameObject.SetActive(false);
+    }
+}
