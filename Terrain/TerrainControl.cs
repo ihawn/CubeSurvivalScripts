@@ -23,13 +23,14 @@ public class TerrainControl : MonoBehaviour
 
     private void Awake()
     {
-        cubes = new GameObject[sg.Length][];
-        cubes[0] = meadowCubes;
-        cubes[1] = beachAndOceanCubes;
-        cubes[2] = darkForestCubes;
-        cubes[3] = rockyBeachCubes;
-        cubes[4] = jungleCubes;
-        cubes[5] = desertCubes;
+        cubes = new GameObject[sg.Length + 1][];
+        cubes[0] = wallCubes;
+        cubes[1] = meadowCubes;
+        cubes[2] = beachAndOceanCubes;
+        cubes[3] = darkForestCubes;
+        cubes[4] = rockyBeachCubes;
+        cubes[5] = jungleCubes;
+        cubes[6] = desertCubes;
 
 
         int len = 0;
@@ -37,7 +38,7 @@ public class TerrainControl : MonoBehaviour
         for (int i = 0; i < cubes.Length; i++)
             len += cubes[i].Length;
 
-        InitializeCubeLists(len);
+        InitializeCubeLists();
         StartCoroutine(UpdateFarCubes());
         StartCoroutine(UpdateCloseCubes());
 
@@ -57,7 +58,7 @@ public class TerrainControl : MonoBehaviour
         UpdateCubes(closeCubes);
     }
 
-    void InitializeCubeLists(int len)
+    void InitializeCubeLists()
     {
         for (int i = 0; i < cubes.Length; i++)
         {
