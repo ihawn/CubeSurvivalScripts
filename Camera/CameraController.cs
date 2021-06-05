@@ -5,7 +5,8 @@ using Cinemachine;
 
 public class CameraController : MonoBehaviour
 {
-    public CinemachineVirtualCamera vcamClose, vcamFar;
+    public CinemachineVirtualCamera vcamFar;
+    public CinemachineFreeLook freeLookCamera;
     public Camera cam;
     public bool camClose = true;
 
@@ -14,15 +15,15 @@ public class CameraController : MonoBehaviour
         if (camClose)
         {
             camClose = false;
-            vcamClose.gameObject.SetActive(false);
-            vcamFar.gameObject.SetActive(true);
+            freeLookCamera.Priority = 0;
+            vcamFar.Priority = 1;
         }
 
         else
         {
             camClose = true;
-            vcamFar.gameObject.SetActive(false);
-            vcamClose.gameObject.SetActive(true);
+            freeLookCamera.Priority = 1;
+            vcamFar.Priority = 1;
         }
     }
 
