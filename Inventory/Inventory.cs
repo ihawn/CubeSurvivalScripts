@@ -13,8 +13,6 @@ public class Inventory : MonoBehaviour
     private void Start()
     {
         InitializeInventory();
-
-        GiveItem("Limestone", 70);
     }
 
     void InitializeInventory()
@@ -29,12 +27,37 @@ public class Inventory : MonoBehaviour
         Item itemToAdd = itemDatabase.GetItem(name);
         int emptySlot = GetFirstEmptySlot(visableInventory);
         int slotwithItem = GetSlotWithName(name);
+        characterItems.Add(itemToAdd);
         int q = quantity;
 
         //inventory is full (slotwise)
         if(emptySlot == -1)
         {
             //check if inventory contains item and if so if maximum stack size is reached
+            int slotWithRoom = SlotWithRoom(itemToAdd);
+
+            //If theres a slot with the item added but it still has room
+            if (slotWithRoom != -1)
+            {
+                //check if items added exceeds stacksize
+                if (quantity + visableInventoryQuantity[slotWithRoom] > itemToAdd.stackSize)
+                {
+                    GiveItem(name, quantity + visableInventoryQuantity[slotWithRoom] - itemToAdd.stackSize); //Give remainder of quantity to next stack
+                    visableInventoryQuantity[slotWithRoom] = itemToAdd.stackSize;
+                }
+
+                //if it fits
+                else
+                {
+                    visableInventoryQuantity[slotWithRoom] += quantity;
+                }
+            }
+
+            else
+            {
+                //Do nothing. Inventory is completely full
+            }
+
         }
 
         //inventory is not full
@@ -80,52 +103,6 @@ public class Inventory : MonoBehaviour
 
         }
 
-       /* Debug.Log("Empty slot: " + emptySlot);
-
-        if (emptySlot != -1)
-        {
-            if (check == null)
-            {
-                characterItems.Add(itemToAdd);
-                visableInventory[emptySlot] = itemToAdd.name;
-
-                if (quantity > itemToAdd.stackSize)
-                {
-                    q = itemToAdd.stackSize;
-                    GiveItem(name, quantity - itemToAdd.stackSize);
-                    visableInventoryQuantity[emptySlot] = itemToAdd.stackSize;
-                    itemToAdd.quantity = itemToAdd.stackSize;
-                }
-
-                else
-                {
-                    visableInventoryQuantity[emptySlot] += quantity;
-                    itemToAdd.quantity += quantity;
-                }
-            }
-
-            else
-            {
-                if (visableInventoryQuantity[GetSlotWithName(name)] + quantity > itemToAdd.stackSize)
-                {
-                    check.quantity = itemToAdd.stackSize;
-                    characterItems.Add(itemToAdd);
-                    visableInventoryQuantity[emptySlot] = itemToAdd.stackSize;
-                    visableInventory[emptySlot] = itemToAdd.name;
-                }
-
-                else
-                {
-                    visableInventoryQuantity[GetSlotWithName(name)] += quantity;
-
-                    check.quantity += quantity;
-                }
-            }
-
-            Debug.Log("Added " + q + " " + itemToAdd.name);
-        }
-        else
-            Debug.Log("Item not added. Inventory full");*/
     }
 
     public Item CheckForItem(int id)
