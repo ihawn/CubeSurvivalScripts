@@ -25,14 +25,14 @@ public class ItemDatabase : MonoBehaviour
     void BuildDatabase()
     {
         items = new List<Item> {
-                new Item(0, 0, true, 64, "Limestone", "A good stone for building", inventoryIcons[0],
+                new Item(0, true, 64, "Limestone", "A good stone for building", inventoryIcons[0],
                 new Dictionary<string, int>
                 {
                     {"Strength", 16},
                     {"Durability", 10 }
                 }),
 
-                new Item(1, 0, true, 64, "Quartz", "A white crystal. It emits a faint glow", inventoryIcons[1],
+                new Item(1, true, 64, "Quartz", "A white crystal. It emits a faint glow", inventoryIcons[1],
                 new Dictionary<string, int>
                 {
                     {"Magic", 1},
