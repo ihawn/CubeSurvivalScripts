@@ -5,6 +5,7 @@ using UnityEngine.VFX;
 
 public class PortalController : MonoBehaviour
 {
+
     public bool activatePortalNextFrame, portalActive, doneActivating;
     public float minPortalSeparation;
     TerrainControl tc;
@@ -121,10 +122,10 @@ public class PortalController : MonoBehaviour
             if (Vector3.Distance(tc.player.transform.position, transform.position) <= rotateRange && speedSlack < 1)
             {
                 speedSlack += Time.deltaTime * rotationAcceleration;
-                portalEffect.SetFloat("Global Spawn Multiplier", 1f);
+                portalEffect.SetFloat("Global Spawn Multiplier", 0.75f);
 
                 connectedPortal.speedSlack += Time.deltaTime * rotationAcceleration;
-                connectedPortal.portalEffect.SetFloat("Global Spawn Multiplier", 1f);
+                connectedPortal.portalEffect.SetFloat("Global Spawn Multiplier", 0.75f);
             }
             else if (Vector3.Distance(tc.player.transform.position, transform.position) > rotateRange && speedSlack > 0)
             {
@@ -144,7 +145,7 @@ public class PortalController : MonoBehaviour
     IEnumerator ActivatePortalRocks()
     {
         RemoveRockRigidbodies();
-        portalActivation.SetFloat("Rate", 1f);
+        portalActivation.SetFloat("Rate", 0.75f);
         SetRockSparkleRate(250);
 
         while (Vector3.Distance(portalRocks[0].transform.localPosition, rockStartPos[0]) > 0.01f)
@@ -185,6 +186,7 @@ public class PortalController : MonoBehaviour
         portalee.transform.position = connectedPortal.portalTo.position;
         portalee.transform.rotation = Quaternion.Euler(connectedPortal.transform.rotation.eulerAngles);
         connectedPortal.speedSlack = 1f;
+        tc.InitializeCubeLists();
 
         if (portalee.GetComponent<CharacterController>() != null)
             portalee.GetComponent<CharacterController>().enabled = true; ;

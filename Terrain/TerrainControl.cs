@@ -58,8 +58,11 @@ public class TerrainControl : MonoBehaviour
         UpdateCubes(closeCubes);
     }
 
-    void InitializeCubeLists()
+    public void InitializeCubeLists()
     {
+        closeCubes.Clear();
+        farCubes.Clear();
+
         for (int i = 0; i < cubes.Length; i++)
         {
             for(int j = 0; j < cubes[i].Length; j++)
