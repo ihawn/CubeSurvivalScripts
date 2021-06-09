@@ -15,7 +15,7 @@ public class RecipeDatabase : MonoBehaviour
     {
         recipes = new List<Recipe>
         {
-            new Recipe("ObsidianKey", new List<string>{ "Limestone", "Quartz" }, new List<int>{8, 32})
+            new Recipe("ObsidianKey", new List<string>{ "Limestone", "Quartz" }, new List<int>{1, 2})
         };
     }
 }

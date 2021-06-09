@@ -7,6 +7,7 @@ public class TileController : MonoBehaviour
 {
     public TileController backTile;
     public Text buttonText;
+    public string whatToCraft;
     public bool isRoot;
 
     private void OnEnable()

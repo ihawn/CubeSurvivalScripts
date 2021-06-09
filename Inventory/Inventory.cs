@@ -14,7 +14,8 @@ public class Inventory : MonoBehaviour
     private void Start()
     {
         InitializeInventory();
-        GiveItem("ObsidianKey", 20);
+        GiveItem("Limestone", 50);
+        GiveItem("Quartz", 100);
     }
 
     void InitializeInventory()
@@ -128,8 +129,8 @@ public class Inventory : MonoBehaviour
         int slot = GetSlotWithName(name);
         if (slot != -1)
         {
-            visableInventoryQuantity[slot]--;
-            if (visableInventoryQuantity[slot] == 0)
+            visableInventoryQuantity[slot] -= quantity;
+            if (visableInventoryQuantity[slot] <= 0)
                 visableInventory[slot] = null;
         }
     }
@@ -176,14 +177,14 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
-    public bool MeetsCraftingRequirements(string itemName)
+    public bool MeetsCraftingRequirements(string itemName, out Recipe r)
     {
-        Recipe r = GetRecipe(itemName);
+        r = GetRecipe(itemName);
         int len = r.items.Count;
 
         for(int i = 0; i < len; i++)
         {
-            if (!HasNumberOfItem(itemName, r.itemCounts[i]))
+            if (!HasNumberOfItem(r.items[i], r.itemCounts[i]))
                 return false;
         }
 

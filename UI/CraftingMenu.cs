@@ -9,10 +9,12 @@ public class CraftingMenu : MonoBehaviour
     public RectTransform activeTileTransform;
     public List<Vector2> branchedTilePositions;
     public float offset, lerpSpeed, spacing;
+    Crafting craft;
 
 
     void Start()
     {
+        craft = GetComponent<Crafting>();
         activeTile.transform.localScale = Vector3.one;
     }
 
@@ -23,6 +25,23 @@ public class CraftingMenu : MonoBehaviour
     }
 
     public void ClickedMenuTile(TileController tileController)
+    {
+        if(tileController.whatToCraft != "")
+        {
+            craft.CraftItem(tileController.whatToCraft);
+        }
+        else
+        {
+            TraverseMenuTree(tileController);
+        }
+    }
+
+    void Craft()
+    {
+
+    }
+
+    void TraverseMenuTree(TileController tileController)
     {
         if (activeTile == tileController)
         {
@@ -38,7 +57,7 @@ public class CraftingMenu : MonoBehaviour
             tileController.backTile.SetButtonActive(false);
         }
 
-        for(int i = 0; i < branchedTiles.Count; i++)
+        for (int i = 0; i < branchedTiles.Count; i++)
         {
             branchedTiles[i].SetButtonActive(false);
         }
@@ -49,7 +68,7 @@ public class CraftingMenu : MonoBehaviour
         branchedTiles.Clear();
         branchedTilePositions.Clear();
 
-        foreach(Transform child in activeTile.transform)
+        foreach (Transform child in activeTile.transform)
         {
             if (child.GetComponent<TileController>() != null)
                 branchedTiles.Add(child.GetComponent<TileController>());
@@ -61,7 +80,7 @@ public class CraftingMenu : MonoBehaviour
         {
             branchedTiles[i].SetButtonActive(true);
             branchedTiles[i].transform.position = activeTileTransform.position;
-            float inside = -Mathf.PI / 2 - (length - 1) * Mathf.PI / (spacing*2f) + i * Mathf.PI / (spacing);
+            float inside = -Mathf.PI / 2 - (length - 1) * Mathf.PI / (spacing * 2f) + i * Mathf.PI / (spacing);
             branchedTilePositions.Add(offset * new Vector2(Mathf.Cos(inside), Mathf.Sin(inside)) + new Vector2(activeTileTransform.position.x, activeTileTransform.position.y));
         }
     }
