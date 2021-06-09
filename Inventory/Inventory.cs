@@ -5,6 +5,7 @@ using UnityEngine;
 public class Inventory : MonoBehaviour
 {
     public List<Item> characterItems = new List<Item>();
+    public RecipeDatabase recipeDatabase;
     public ItemDatabase itemDatabase;
     public int visableInventorySize;
     public string[] visableInventory;
@@ -106,14 +107,19 @@ public class Inventory : MonoBehaviour
 
     }
 
-    public Item CheckForItem(int id)
-    {
-        return characterItems.Find(item => item.id == id);
-    }
-
     public Item CheckForItem(string name)
     {
         return characterItems.Find(item => item.name == name);
+    }
+
+    public Recipe GetRecipe(string name)
+    {
+        return recipeDatabase.recipes.Find(recipe => recipe.whatToMake == name);
+    }
+
+    public Item GetItem(string name)
+    {
+        return itemDatabase.items.Find(item => item.name == name);
     }
 
     public void RemoveItem(string name, int quantity)
@@ -153,5 +159,34 @@ public class Inventory : MonoBehaviour
                 return i;
 
         return -1;
+    }
+
+    public bool HasNumberOfItem(string itemName, int num)
+    {
+        int sum = 0;
+
+        for(int i = 0; i < visableInventory.Length; i++)
+        {
+            if (visableInventory[i] == itemName)
+                sum += visableInventoryQuantity[i];
+            if (sum >= num)
+                return true;
+        }
+
+        return false;
+    }
+
+    public bool MeetsCraftingRequirements(string itemName)
+    {
+        Recipe r = GetRecipe(itemName);
+        int len = r.items.Count;
+
+        for(int i = 0; i < len; i++)
+        {
+            if (!HasNumberOfItem(itemName, r.itemCounts[i]))
+                return false;
+        }
+
+        return true;
     }
 }

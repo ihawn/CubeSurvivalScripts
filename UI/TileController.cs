@@ -6,20 +6,13 @@ using UnityEngine.UI;
 public class TileController : MonoBehaviour
 {
     public TileController backTile;
-    public Transform goPosition;
     public Text buttonText;
     public bool isRoot;
 
-    private void Start()
+    private void OnEnable()
     {
         if(!isRoot)
             SetButtonActive(false);
-    }
-
-    private void OnEnable()
-    {
-        transform.localScale = Vector3.zero;
-        transform.position = goPosition.position;
     }
 
     public void SetButtonActive(bool b)

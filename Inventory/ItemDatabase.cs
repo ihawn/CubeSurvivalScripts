@@ -24,7 +24,8 @@ public class ItemDatabase : MonoBehaviour
 
     void BuildDatabase()
     {
-        items = new List<Item> {
+        items = new List<Item>
+        {
                 new Item(0, true, 64, "Limestone", "A good stone for building", inventoryIcons[0],
                 new Dictionary<string, int>
                 {
@@ -43,7 +44,14 @@ public class ItemDatabase : MonoBehaviour
                 new Dictionary<string, int>
                 {
                     {"Value", 100 }
+                }),
+
+                new Item(3, true, 64, "OakFloor", "A sturdy oaken floor", inventoryIcons[3],
+                new Dictionary<string, int>
+                {
+                    {"Strength", 10 },
+                    {"Durability", 10 }
                 })
-            };
+        };
     }
 }

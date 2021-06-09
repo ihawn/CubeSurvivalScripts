@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     PlayerControls controls;
     CameraController cameraControls;
+    public UIController theUIController;
 
     Animator anim;
     Rigidbody rb;
@@ -49,33 +50,15 @@ public class PlayerController : MonoBehaviour
         controls.Gameplay.Enable();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         KeyboardInput();
+    }
+
+    private void Update()
+    {
+
         CheckInputs();
-
-        Vector3 m = new Vector3(-move.y, 0f, move.x) * walkSpeed * Time.deltaTime;
-
-
-       /* if (m.magnitude > 0.05f)
-            mSticky = m;
-
-        // transform.Translate(m, Space.Self);
-
-        rb.MovePosition(transform.position + Time.deltaTime * transform.TransformDirection(m));
-        Debug.DrawRay(transform.position, transform.TransformDirection(m) * 3f, Color.red);
-
-        Vector3 r = new Vector3(0f, rotate.x, 0f);
-        transform.Rotate(r * sensitivity * Time.deltaTime);
-
-        rig.transform.rotation = Quaternion.Lerp(rig.transform.rotation, Quaternion.LookRotation(mSticky.normalized) * transform.rotation, rotateSpeed * Time.deltaTime);
-
-        if (cameraControls.camClose)
-        {
-            Vector3 r2 = new Vector3(-rotate.y, 0f, 0f);
-            cameraTarget.transform.Rotate(r2 * sensitivity * Time.deltaTime);
-        }*/
-
         UpdateMovementBools();
         UpdatePlayerAnimations();
     }
@@ -85,6 +68,12 @@ public class PlayerController : MonoBehaviour
         if(Input.GetMouseButtonDown(2))
         {
             cameraControls.ToggleViewCamera();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            print("tabpressed");
+            theUIController.ToggleMenu();
         }
     }
 
@@ -104,8 +93,6 @@ public class PlayerController : MonoBehaviour
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
-
-
         }
     }
 

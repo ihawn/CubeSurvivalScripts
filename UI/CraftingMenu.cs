@@ -8,7 +8,7 @@ public class CraftingMenu : MonoBehaviour
     public List<TileController> branchedTiles;
     public RectTransform activeTileTransform;
     public List<Vector2> branchedTilePositions;
-    public float offset, lerpSpeed;
+    public float offset, lerpSpeed, spacing;
 
 
     void Start()
@@ -44,6 +44,7 @@ public class CraftingMenu : MonoBehaviour
         }
 
         tileController.SetButtonActive(true);
+        tileController.transform.position = activeTileTransform.position;
 
         branchedTiles.Clear();
         branchedTilePositions.Clear();
@@ -59,7 +60,8 @@ public class CraftingMenu : MonoBehaviour
         for (int i = 0; i < length; i++)
         {
             branchedTiles[i].SetButtonActive(true);
-            float inside = -Mathf.PI / 2 - (length - 1) * Mathf.PI / 24f + i * Mathf.PI / 12f;
+            branchedTiles[i].transform.position = activeTileTransform.position;
+            float inside = -Mathf.PI / 2 - (length - 1) * Mathf.PI / (spacing*2f) + i * Mathf.PI / (spacing);
             branchedTilePositions.Add(offset * new Vector2(Mathf.Cos(inside), Mathf.Sin(inside)) + new Vector2(activeTileTransform.position.x, activeTileTransform.position.y));
         }
     }
