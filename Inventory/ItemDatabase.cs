@@ -37,6 +37,12 @@ public class ItemDatabase : MonoBehaviour
                 {
                     {"Magic", 1},
                     {"Value", 10 }
+                }),
+
+                new Item(2, true, 64, "ObsidianKey", "A dark colored reflective key. Its color matches that of the walls", inventoryIcons[2],
+                new Dictionary<string, int>
+                {
+                    {"Value", 100 }
                 })
             };
     }

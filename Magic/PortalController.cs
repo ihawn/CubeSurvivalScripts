@@ -24,6 +24,7 @@ public class PortalController : MonoBehaviour
     Quaternion[] rockStartRotation;
     public float rockLerpSpeed, rockPulseSpeed, rockPulseEpsilon, sigma, mu;
     public Vector3 minRockRange, maxRockRange;
+    public float playerDistanceThreshold;
 
     public string[] canPortalList;
 
@@ -50,6 +51,11 @@ public class PortalController : MonoBehaviour
         {
             MoveFloatingRocks();
             UpdateActivationEffects();
+        }
+
+        if(Vector3.Distance(tc.player.transform.position, transform.position) <= playerDistanceThreshold)
+        {
+            activatePortalNextFrame = true;
         }
     }
 

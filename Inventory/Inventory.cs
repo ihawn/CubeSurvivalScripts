@@ -13,6 +13,7 @@ public class Inventory : MonoBehaviour
     private void Start()
     {
         InitializeInventory();
+        GiveItem("ObsidianKey", 20);
     }
 
     void InitializeInventory()
@@ -118,12 +119,12 @@ public class Inventory : MonoBehaviour
     public void RemoveItem(string name, int quantity)
     {
         Item item = CheckForItem(name);
-        if (item != null)
+        int slot = GetSlotWithName(name);
+        if (slot != -1)
         {
-
-            characterItems.Remove(item);
-
-            Debug.Log("Item removed: " + item.name);
+            visableInventoryQuantity[slot]--;
+            if (visableInventoryQuantity[slot] == 0)
+                visableInventory[slot] = null;
         }
     }
 

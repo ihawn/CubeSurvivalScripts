@@ -6,7 +6,7 @@ using UnityEngine;
 public class TerrainControl : MonoBehaviour
 {
     public bool shouldGenerate, doneGenerating;
-    public GameObject[] wallCubes, meadowCubes, beachAndOceanCubes, darkForestCubes, rockyBeachCubes, jungleCubes, desertCubes;
+    public GameObject[] wallCubes, meadowCubes, beachAndOceanCubes, darkForestCubes, rockyBeachCubes, jungleCubes, desertCubes, oceanCubes;
     GameObject[][] cubes;
     public GameObject player;
     public StaticGenerator[] sg;
@@ -31,6 +31,7 @@ public class TerrainControl : MonoBehaviour
         cubes[4] = rockyBeachCubes;
         cubes[5] = jungleCubes;
         cubes[6] = desertCubes;
+        cubes[7] = oceanCubes;
 
 
         int len = 0;

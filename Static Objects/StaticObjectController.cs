@@ -20,6 +20,18 @@ public class StaticObjectController : MonoBehaviour
      //   DestroyIfTouchingLarger();
     }
 
+    void DestroyIfNearWall()
+    {
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, size);
+
+        for (int i = 0; i < hitColliders.Length; i++)
+        {
+            if (hitColliders[i].gameObject.tag == "Wall")
+            {
+
+            }
+        }
+    }
 
     void DestroyIfTouchingLarger()
     {

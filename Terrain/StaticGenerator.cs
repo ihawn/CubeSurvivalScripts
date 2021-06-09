@@ -90,6 +90,10 @@ public class StaticGenerator : MonoBehaviour
                 case 6:
                     StartCoroutine(Generate(tc.desertCubes));
                     break;
+
+                case 7:
+                    StartCoroutine(Generate(tc.oceanCubes));
+                    break;
             }
         }
     }
@@ -130,7 +134,7 @@ public class StaticGenerator : MonoBehaviour
     {
         RaycastHit hit;
         Vector3 pos = Vector3.zero;
-        Vector3 rayPos = new Vector3(xPos, 60f, zPos);
+        Vector3 rayPos = new Vector3(xPos, 30f, zPos);
         isGround = false;
 
         if (Physics.Raycast(rayPos, transform.TransformDirection(Vector3.down), out hit, Mathf.Infinity))
