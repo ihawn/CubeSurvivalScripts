@@ -10,7 +10,12 @@ public class InventoryUI : MonoBehaviour
     public Image[] visableInventorySlots;
     public Image[] inventorySprites;
     public Text[] inventoryQuantity;
+    public int selectedSlot;
 
+    private void Start()
+    {
+        SetSelectedSlot(0);
+    }
 
     private void Update()
     {
@@ -37,5 +42,29 @@ public class InventoryUI : MonoBehaviour
             }
 
         }
+
+    }
+
+    public void ChangeSelectedSlot(float scrollDelta)
+    {
+        if (scrollDelta < 0)
+            SetSelectedSlot(selectedSlot + 1);
+        else
+            SetSelectedSlot(selectedSlot - 1);
+    }
+
+    void SetSelectedSlot(int i)
+    {
+        print(i);
+        visableInventorySlots[selectedSlot].color = notSelectedColor;
+
+        if (i < visableInventorySlots.Length && i >= 0)
+            selectedSlot = i;
+        else if (i < 0)
+            selectedSlot = visableInventorySlots.Length - 1;
+        else if (i >= visableInventorySlots.Length)
+            selectedSlot = 0;
+
+        visableInventorySlots[selectedSlot].color = selectedColor;
     }
 }

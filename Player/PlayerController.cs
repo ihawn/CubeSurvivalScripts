@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     PlayerControls controls;
     CameraController cameraControls;
     public UIController theUIController;
+    public InventoryUI inventoryUI;
 
     Animator anim;
     Rigidbody rb;
@@ -57,10 +58,10 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-
         CheckInputs();
         UpdateMovementBools();
         UpdatePlayerAnimations();
+        UpdateItemSlotInput();
     }
 
     void CheckInputs()
@@ -94,6 +95,7 @@ public class PlayerController : MonoBehaviour
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
+
     }
 
 
@@ -110,4 +112,11 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("Running", running);
     }
 
+    void UpdateItemSlotInput()
+    {
+        if(Input.mouseScrollDelta.y != 0)
+        {
+            inventoryUI.ChangeSelectedSlot(Input.mouseScrollDelta.y);
+        }
+    }
 }
