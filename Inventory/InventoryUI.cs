@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class InventoryUI : MonoBehaviour
+public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
 
     public Inventory playerInventory;
@@ -15,6 +16,7 @@ public class InventoryUI : MonoBehaviour
 
     public Transform rightHand;
     public GameObject rightHandObject;
+    GameObject currentHover;
 
     private void Start()
     {
@@ -24,6 +26,9 @@ public class InventoryUI : MonoBehaviour
     private void Update()
     {
         UpdateInventoryUI();
+        UpdateSlotPosition();
+        print(currentHover);
+        print(visableInventorySlots[0].gameObject);
     }
 
 
@@ -82,5 +87,41 @@ public class InventoryUI : MonoBehaviour
         
         if(rightHandObject != null)
             rightHandObject.transform.parent = rightHand;
+    }
+
+    void UpdateSlotPosition()
+    {
+        bool dragging = false;
+        
+        if (Input.GetMouseButton(0) && currentHover != null && ImagesContainObject(visableInventorySlots, currentHover))
+            dragging = true;
+        else if (Input.GetMouseButtonUp(0))
+            dragging = false;
+
+        if(dragging)
+        {
+
+        }
+        print(dragging);
+    }
+
+    bool ImagesContainObject(Image[] a, GameObject g)
+    {
+        for(int i = 0; i < a.Length; i++)
+        {
+            if (a[i].gameObject == g)
+                return true;
+        }
+        return false;
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        currentHover = eventData.pointerCurrentRaycast.gameObject;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        currentHover = null;
     }
 }
