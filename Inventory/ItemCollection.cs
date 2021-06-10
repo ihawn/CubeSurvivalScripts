@@ -6,8 +6,9 @@ public class ItemCollection : MonoBehaviour
 {
     public string itemName;
     public int quantity = 1;
+    public bool canCollect = true;
 
-    bool canCollect = true;
+    public Vector3 rotationOffset, positionOffset;
 
     void OnEnable()
     {

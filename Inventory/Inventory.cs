@@ -10,6 +10,8 @@ public class Inventory : MonoBehaviour
     public int visableInventorySize;
     public string[] visableInventory;
     public int[] visableInventoryQuantity;
+    public List<ItemCollection> allItemPrefabs;
+    public List<GameObject> allItemPrefabsStatic;
 
     private void Start()
     {
@@ -189,5 +191,21 @@ public class Inventory : MonoBehaviour
         }
 
         return true;
+    }
+
+    public GameObject RetrieveGameObjectByName(string _name)
+    {
+        if (_name != "" && _name != null)
+            return allItemPrefabs.Find(prefab => prefab.itemName == _name).gameObject;
+        else
+            return null;
+    }
+
+    public GameObject RetrieveStaticPrefabByName(string _name)
+    {
+        if (_name != "" && _name != null)
+            return allItemPrefabsStatic.Find(prefab => prefab.GetComponent<ItemCollection>().itemName == _name).gameObject;
+        else
+            return null;
     }
 }

@@ -5,12 +5,16 @@ using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour
 {
+
     public Inventory playerInventory;
     public Color selectedColor, notSelectedColor;
     public Image[] visableInventorySlots;
     public Image[] inventorySprites;
     public Text[] inventoryQuantity;
     public int selectedSlot;
+
+    public Transform rightHand;
+    public GameObject rightHandObject;
 
     private void Start()
     {
@@ -55,7 +59,6 @@ public class InventoryUI : MonoBehaviour
 
     void SetSelectedSlot(int i)
     {
-        print(i);
         visableInventorySlots[selectedSlot].color = notSelectedColor;
 
         if (i < visableInventorySlots.Length && i >= 0)
@@ -66,5 +69,18 @@ public class InventoryUI : MonoBehaviour
             selectedSlot = 0;
 
         visableInventorySlots[selectedSlot].color = selectedColor;
+        UpdateItemInHand();
+    }
+
+    void UpdateItemInHand()
+    {
+        GameObject retrievedByName = playerInventory.RetrieveStaticPrefabByName(playerInventory.visableInventory[selectedSlot]);
+        Destroy(rightHandObject);
+
+        if (playerInventory.visableInventory[selectedSlot] != "" && retrievedByName != null)
+            rightHandObject = Instantiate(retrievedByName, rightHand.transform.position, rightHand.transform.rotation);
+        
+        if(rightHandObject != null)
+            rightHandObject.transform.parent = rightHand;
     }
 }
