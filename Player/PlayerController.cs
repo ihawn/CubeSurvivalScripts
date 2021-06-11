@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     CameraController cameraControls;
     public UIController theUIController;
     public InventoryUI inventoryUI;
+    public PlayerInterract playerInterract;
 
     Animator anim;
     Rigidbody rb;
@@ -28,6 +29,8 @@ public class PlayerController : MonoBehaviour
 
     public CharacterController controller;
     public float speed = 6f;
+
+    KeyCode keycode;
 
     private void Awake()
     {
@@ -62,6 +65,8 @@ public class PlayerController : MonoBehaviour
         UpdateMovementBools();
         UpdatePlayerAnimations();
         UpdateItemSlotInput();
+        UpdateKeyPresses();
+        UpdateSlotSwitching();
     }
 
     void CheckInputs()
@@ -73,7 +78,6 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            print("tabpressed");
             theUIController.ToggleMenu();
         }
     }
@@ -118,5 +122,27 @@ public class PlayerController : MonoBehaviour
         {
             inventoryUI.ChangeSelectedSlot(Input.mouseScrollDelta.y);
         }
+
+
+    }
+
+    void UpdateSlotSwitching()
+    {
+        if (!playerInterract.inChoicesMenu)
+        {
+            switch(keycode)
+            {
+                case KeyCode.Alpha1:
+                    inventoryUI.ChangeSelectedSlot(0);
+                break;
+
+            }
+        }
+    }
+
+    void UpdateKeyPresses()
+    {
+        foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
+            keycode = vKey;
     }
 }

@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class PlayerInterract : MonoBehaviour
 {
     public Inventory playerInventory;
+    public UIController theUIController;
     public Text messageText;
     public GameObject[] ignoreList;
     public GameObject[] choices;
@@ -14,6 +15,8 @@ public class PlayerInterract : MonoBehaviour
     public Camera Cam;
     public string crossHairHit;
     public float messageDuration;
+
+    public bool inChoicesMenu;
 
     void Update()
     {
@@ -53,42 +56,47 @@ public class PlayerInterract : MonoBehaviour
 
     void InterractChoice(string choice)
     {
-
-        switch(choice)
+        if (!theUIController.inMenus)
         {
-            case "keyhole":
-                Interractions.Door(
-                    playerInventory.CheckForItem("ObsidianKey") != null,
-                    lookAt.GetComponent<Keyhole>().attachedDoor,
-                    new string[] { "1] Listen at the keyhole", "2] Insert Key" },
-                    choices,
-                    messageText,
-                    messageDuration,
-                    playerInventory,
-                    lookAt,
-                    lookAt.GetComponent<Keyhole>().attachedDoor.keyholeMessage
-                    );
-                break;
+            switch (choice)
+            {
+                case "keyhole":
+                    inChoicesMenu = true;
+                    Interractions.Door(
+                        playerInventory.CheckForItem("ObsidianKey") != null,
+                        lookAt.GetComponent<Keyhole>().attachedDoor,
+                        new string[] { "1] Listen at the keyhole", "2] Insert Key" },
+                        choices,
+                        messageText,
+                        messageDuration,
+                        playerInventory,
+                        lookAt,
+                        lookAt.GetComponent<Keyhole>().attachedDoor.keyholeMessage
+                        );
+                    break;
 
-            case "keyhole2":
-                Interractions.Door(
-                    playerInventory.CheckForItem("ObsidianKey") != null,
-                    lookAt.GetComponent<Keyhole>().attachedDoor,
-                    new string[] { "1] Listen at the keyhole", "2] Insert Key" },
-                    choices,
-                    messageText,
-                    messageDuration,
-                    playerInventory,
-                    lookAt,
-                    lookAt.GetComponent<Keyhole>().attachedDoor.keyholeMessage2
-                    );
-                break;
+                case "keyhole2":
+                    inChoicesMenu = true;
+                    Interractions.Door(
+                        playerInventory.CheckForItem("ObsidianKey") != null,
+                        lookAt.GetComponent<Keyhole>().attachedDoor,
+                        new string[] { "1] Listen at the keyhole", "2] Insert Key" },
+                        choices,
+                        messageText,
+                        messageDuration,
+                        playerInventory,
+                        lookAt,
+                        lookAt.GetComponent<Keyhole>().attachedDoor.keyholeMessage2
+                        );
+                    break;
 
 
-            default:
-                Interractions.HideChoices(choices);
-                Interractions.Hide(messageText);
-                break;
+                default:
+                    inChoicesMenu = false;
+                    Interractions.HideChoices(choices);
+                    Interractions.Hide(messageText);
+                    break;
+            }
         }
 
     }

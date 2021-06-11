@@ -27,8 +27,8 @@ public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     {
         UpdateInventoryUI();
         UpdateSlotPosition();
-        print(currentHover);
-        print(visableInventorySlots[0].gameObject);
+      //  print(currentHover);
+      //  print(visableInventorySlots[0].gameObject);
     }
 
 
@@ -102,7 +102,7 @@ public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         {
 
         }
-        print(dragging);
+       // print(dragging);
     }
 
     bool ImagesContainObject(Image[] a, GameObject g)
