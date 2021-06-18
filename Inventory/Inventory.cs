@@ -18,6 +18,7 @@ public class Inventory : MonoBehaviour
         InitializeInventory();
         GiveItem("Limestone", 50);
         GiveItem("Quartz", 100);
+  //      GiveItem("ObsidianKey", 10);
     }
 
     void InitializeInventory()

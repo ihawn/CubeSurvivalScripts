@@ -5,11 +5,14 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    public string[] shouldSlowAnimations;
+
     PlayerControls controls;
     CameraController cameraControls;
     public UIController theUIController;
     public InventoryUI inventoryUI;
     public PlayerInterract playerInterract;
+    public GameObject groundedChecker;
 
     Animator anim;
     Rigidbody rb;
@@ -25,15 +28,21 @@ public class PlayerController : MonoBehaviour
     public float walkSpeed, sensitivity, rotateSpeed, turnSmoothTime;
     float turnSmoothVelocity;
 
-    public bool running;
+    public bool running, grounded, jump, sprinting, hasWeapon, punching, shouldSlow, modifiedAttack, kicking;
+    int attackID = 0;
 
     public CharacterController controller;
-    public float speed = 6f;
+    public float speed = 6f, runSpeed = 6f, sprintSpeed = 12f, gravity = -9.81f, jumpHeight = 1f, groundedRadius = 0.8f, playerDecell = 0.75f, stopPunchingDelay = 0.5f;
 
     KeyCode keycode;
+    public Vector3 playerVelocity, airborneVelocity;
+    Coroutine attackCo;
+
+    float horizontalMove = 0f, verticalMove = 0f;
 
     private void Awake()
     {
+        LockCurser();
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
 
@@ -56,7 +65,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        KeyboardInput();
+        //Movement(horizontalMove, verticalMove);
     }
 
     private void Update()
@@ -67,6 +76,22 @@ public class PlayerController : MonoBehaviour
         UpdateItemSlotInput();
         UpdateKeyPresses();
         UpdateSlotSwitching();
+        CheckGroundedState();
+        KeyboardInput();
+        Movement(horizontalMove, verticalMove);
+    }
+
+    void CheckGroundedState()
+    {
+        Collider[] groundedCollider = Physics.OverlapSphere(groundedChecker.transform.position, groundedRadius);
+
+        grounded = false;
+
+        for(int i = 0; i < groundedCollider.Length; i++)
+        {
+            if (groundedCollider[i].gameObject.tag == "Ground" || groundedCollider[i].gameObject.tag == "Rock")
+                grounded = true;
+        }
     }
 
     void CheckInputs()
@@ -83,29 +108,124 @@ public class PlayerController : MonoBehaviour
     }
 
 
-    void KeyboardInput()
+    void Movement(float horizontal, float vertical)
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-        direction = new Vector3(horizontal, 0f, vertical).normalized;
+        shouldSlow = ShouldSlow();
 
-        if(direction.magnitude >= 0.1)
+        direction = new Vector3(horizontal, 0f, vertical).normalized;
+        if (sprinting)
+            speed = sprintSpeed;
+        else
+            speed = runSpeed;
+
+        if (direction.magnitude >= 0.1 && grounded && !shouldSlow)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
 
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward.normalized;
+            playerVelocity.x = moveDir.x * speed;
+            playerVelocity.z = moveDir.z * speed;
+            airborneVelocity.x = playerVelocity.x;
+            airborneVelocity.z = playerVelocity.z;
+        }
+        else if (!grounded)
+        {
+            playerVelocity.x = airborneVelocity.x;
+            playerVelocity.z = airborneVelocity.z;
+        }
+        else
+        {
+            playerVelocity.x *= playerDecell;
+            playerVelocity.z *= playerDecell;
+            airborneVelocity.x *= playerDecell;
+            airborneVelocity.z *= playerDecell;
         }
 
+        if (grounded && playerVelocity.y < 0)
+        {
+            playerVelocity.y = 0f;
+            jump = false;
+        }
+
+        if(shouldSlow)
+        {
+            playerVelocity.x *= playerDecell;
+            playerVelocity.z *= playerDecell;
+            airborneVelocity.x *= playerDecell;
+            airborneVelocity.z *= playerDecell;
+        }
+
+        playerVelocity.y += gravity * Time.deltaTime;
+        controller.Move(playerVelocity * Time.deltaTime);
     }
 
 
+    void KeyboardInput()
+    {
+        horizontalMove = Input.GetAxisRaw("Horizontal");
+        verticalMove = Input.GetAxisRaw("Vertical");
+        
+
+        if (Input.GetKey(KeyCode.LeftShift))
+            sprinting = true;
+        else
+            sprinting = false;
+
+
+        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+        {
+            playerVelocity.y += Mathf.Sqrt(jumpHeight * -3.0f * gravity);
+            jump = true;
+        }
+
+        if (Input.GetMouseButton(1))
+            modifiedAttack = true;
+        else
+            modifiedAttack = false;
+
+        if(Input.GetMouseButtonDown(0))
+        {
+            if(hasWeapon)
+            {
+                //todo
+            }
+            else
+            {
+                if (attackCo != null)
+                    StopCoroutine(attackCo);
+
+                if (modifiedAttack)
+                {
+                    attackCo = StartCoroutine(Kick());
+                }
+                else
+                {
+                    attackCo = StartCoroutine(Punch());
+                }
+            }
+        }
+    }
+
+    IEnumerator Punch()
+    {
+        punching = true;
+        yield return new WaitForSeconds(stopPunchingDelay);
+        punching = false;
+    }
+
+    IEnumerator Kick()
+    {
+        kicking = true;
+        yield return new WaitForSeconds(stopPunchingDelay);
+        kicking = false;
+    }
+
     void UpdateMovementBools()
     {
-        if (move.magnitude > 0 || direction.magnitude >= 0.1)
+        if (new Vector2(playerVelocity.x, playerVelocity.z).magnitude >= 0.05f)
             running = true;
         else
             running = false;
@@ -114,6 +234,11 @@ public class PlayerController : MonoBehaviour
     void UpdatePlayerAnimations()
     {
         anim.SetBool("Running", running);
+        anim.SetBool("Grounded", grounded);
+        anim.SetBool("Jump", jump);
+        anim.SetBool("Sprint", sprinting);
+        anim.SetBool("Punching", punching);
+        anim.SetBool("Kicking", kicking);
     }
 
     void UpdateItemSlotInput()
@@ -144,5 +269,29 @@ public class PlayerController : MonoBehaviour
     {
         foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
             keycode = vKey;
+    }
+
+    bool ShouldSlow()
+    {
+        for(int i = 0; i < shouldSlowAnimations.Length; i++)
+        {
+            if (anim.GetCurrentAnimatorStateInfo(0).IsName(shouldSlowAnimations[i]))
+                return true;
+        }
+
+        
+        return false;
+    }
+
+    public void UnlockCurser()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void LockCurser()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 }

@@ -6,6 +6,7 @@ public class UIController : MonoBehaviour
 {
     public bool inMenus;
     public GameObject menu;
+    public PlayerController player;
 
     public void ToggleMenu()
     {
@@ -13,11 +14,13 @@ public class UIController : MonoBehaviour
         {
             inMenus = false;
             menu.SetActive(false);
+            player.LockCurser();
         }
         else
         {
             inMenus = true;
             menu.SetActive(true);
+            player.UnlockCurser();
         }
     }
 }

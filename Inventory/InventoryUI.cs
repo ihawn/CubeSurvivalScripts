@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class InventoryUI : MonoBehaviour
 {
 
     public Inventory playerInventory;
@@ -16,7 +16,13 @@ public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     public Transform rightHand;
     public GameObject rightHandObject;
-    GameObject currentHover;
+    public GameObject hoveredSlot;
+    public GameObject pressedSlot;
+
+    Vector3 dragOffset;
+
+    public bool buttonPressed;
+    public float buttonDragTolerance = 20f;
 
     private void Start()
     {
@@ -25,10 +31,12 @@ public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     private void Update()
     {
-        UpdateInventoryUI();
         UpdateSlotPosition();
-      //  print(currentHover);
-      //  print(visableInventorySlots[0].gameObject);
+    }
+
+    private void LateUpdate()
+    {
+        UpdateInventoryUI();
     }
 
 
@@ -83,26 +91,92 @@ public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         Destroy(rightHandObject);
 
         if (playerInventory.visableInventory[selectedSlot] != "" && retrievedByName != null)
+        {
             rightHandObject = Instantiate(retrievedByName, rightHand.transform.position, rightHand.transform.rotation);
+        }
         
         if(rightHandObject != null)
             rightHandObject.transform.parent = rightHand;
+        
     }
 
     void UpdateSlotPosition()
     {
-        bool dragging = false;
-        
-        if (Input.GetMouseButton(0) && currentHover != null && ImagesContainObject(visableInventorySlots, currentHover))
-            dragging = true;
-        else if (Input.GetMouseButtonUp(0))
-            dragging = false;
 
-        if(dragging)
+        bool wasNull = false;
+
+        if (pressedSlot == null)
+            wasNull = true;
+
+        if(Input.GetMouseButtonDown(0) && hoveredSlot != null)
         {
-
+            pressedSlot = hoveredSlot;
+            hoveredSlot = null;
         }
-       // print(dragging);
+        if(Input.GetMouseButtonUp(0))
+        {
+            if(pressedSlot != null)
+            {
+                GameObject newParent = ShortestDistance(pressedSlot.GetComponent<SlotController>().sprite, visableInventorySlots);
+                
+                pressedSlot.GetComponent<SlotController>().sprite.transform.position = newParent.transform.position;
+                pressedSlot.GetComponent<SlotController>().sprite.transform.SetParent(newParent.transform);
+                newParent.GetComponent<SlotController>().sprite.transform.position = pressedSlot.transform.position;
+                newParent.GetComponent<SlotController>().sprite.transform.SetParent(pressedSlot.transform);
+
+                GameObject temp = pressedSlot.GetComponent<SlotController>().sprite;
+                pressedSlot.GetComponent<SlotController>().sprite = newParent.GetComponent<SlotController>().sprite;
+                newParent.GetComponent<SlotController>().sprite = temp;
+
+                Image temp1_5 = inventorySprites[pressedSlot.GetComponent<SlotController>().slotID];
+                inventorySprites[pressedSlot.GetComponent<SlotController>().slotID] = inventorySprites[newParent.GetComponent<SlotController>().slotID];
+                inventorySprites[newParent.GetComponent<SlotController>().slotID] = temp1_5;
+
+                Text temp1_9 = inventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID];
+                inventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID] = inventoryQuantity[newParent.GetComponent<SlotController>().slotID];
+                inventoryQuantity[newParent.GetComponent<SlotController>().slotID] = temp1_9;
+
+                string temp2 = playerInventory.visableInventory[pressedSlot.GetComponent<SlotController>().slotID];
+                playerInventory.visableInventory[pressedSlot.GetComponent<SlotController>().slotID] = playerInventory.visableInventory[newParent.GetComponent<SlotController>().slotID];
+                playerInventory.visableInventory[newParent.GetComponent<SlotController>().slotID] = temp2;
+
+                int temp3 = playerInventory.visableInventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID];
+                playerInventory.visableInventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID] = playerInventory.visableInventoryQuantity[newParent.GetComponent<SlotController>().slotID];
+                playerInventory.visableInventoryQuantity[newParent.GetComponent<SlotController>().slotID] = temp3;
+
+                newParent.GetComponent<SlotController>().sprite.transform.SetSiblingIndex(0);
+            }
+
+            pressedSlot = null;
+        }
+
+        if(pressedSlot != null)
+        {
+            if(wasNull)
+                dragOffset = pressedSlot.transform.position - Input.mousePosition;
+
+            Vector3 pos = Input.mousePosition + dragOffset;
+            pressedSlot.GetComponent<SlotController>().sprite.transform.position = new Vector3(pressedSlot.GetComponent<SlotController>().sprite.transform.position.x, pos.y, pressedSlot.GetComponent<SlotController>().sprite.transform.position.z);
+        }
+    }
+
+    GameObject ShortestDistance(GameObject g1, Image[] g2)
+    {
+        float minDist = Vector3.Distance(g1.transform.position, g2[0].gameObject.transform.position);
+        GameObject minObj = g2[0].gameObject;
+
+        for(int i = 1; i < g2.Length; i++)
+        {
+            float dist = Vector3.Distance(g1.transform.position, g2[i].gameObject.transform.position);
+
+            if (dist < minDist)
+            {
+                minDist = dist;
+                minObj = g2[i].gameObject;
+            }
+        }
+
+        return minObj;
     }
 
     bool ImagesContainObject(Image[] a, GameObject g)
@@ -115,13 +189,4 @@ public class InventoryUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         return false;
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        currentHover = eventData.pointerCurrentRaycast.gameObject;
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        currentHover = null;
-    }
 }
