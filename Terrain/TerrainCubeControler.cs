@@ -8,6 +8,7 @@ public class TerrainCubeControler : MonoBehaviour
     public TerrainControl theTerrainController;
     Coroutine upCo, downCo;
     public bool generationDone;
+    public List<GameObject> childList;
 
     private void Awake()
     {
@@ -55,6 +56,20 @@ public class TerrainCubeControler : MonoBehaviour
         }
 
         transform.position = startPos;
+
+        foreach(GameObject g in childList)
+        {
+
+            if (g.GetComponent<TerrainChild>().hasRigidbody)
+            {
+                g.AddComponent<Rigidbody>();
+
+                if(g.GetComponent<TerrainChild>().hasKinematicRigidbody)
+                {
+                    g.GetComponent<Rigidbody>().isKinematic = true;
+                }
+            }
+        }
     }
 
     IEnumerator MoveDown()
@@ -67,7 +82,26 @@ public class TerrainCubeControler : MonoBehaviour
             yield return null;
         }
 
+        foreach(GameObject g in childList)
+        {
+
+            if(g.GetComponent<Rigidbody>() != null)
+            {
+
+                Destroy(g.GetComponent<Rigidbody>());
+            }
+        }
+
         transform.position = pos;
         gameObject.SetActive(false);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.GetComponent<TerrainChild>() != null)
+        {
+            childList.Add(other.gameObject);
+            other.transform.parent = gameObject.transform;
+        }
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     public string[] shouldSlowAnimations;
+    public string[] punchDoesDamageAnimations;
 
     PlayerControls controls;
     CameraController cameraControls;
@@ -32,13 +33,16 @@ public class PlayerController : MonoBehaviour
     int attackID = 0;
 
     public CharacterController controller;
-    public float speed = 6f, runSpeed = 6f, sprintSpeed = 12f, gravity = -9.81f, jumpHeight = 1f, groundedRadius = 0.8f, playerDecell = 0.75f, stopPunchingDelay = 0.5f;
+    public float speed = 6f, runSpeed = 6f, sprintSpeed = 12f, gravity = -9.81f, jumpHeight = 1f, groundedRadius = 0.8f, playerDecell = 0.75f, stopPunchingDelay = 0.5f, acceleration = 1f;
 
     KeyCode keycode;
     public Vector3 playerVelocity, airborneVelocity;
     Coroutine attackCo;
 
     float horizontalMove = 0f, verticalMove = 0f;
+
+    public bool armed;
+    public GameObject rightHand, leftHand;
 
     private void Awake()
     {
@@ -79,6 +83,7 @@ public class PlayerController : MonoBehaviour
         CheckGroundedState();
         KeyboardInput();
         Movement(horizontalMove, verticalMove);
+        UpdateAttackDamage();
     }
 
     void CheckGroundedState()
@@ -107,7 +112,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     void Movement(float horizontal, float vertical)
     {
         shouldSlow = ShouldSlow();
@@ -126,8 +130,8 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward.normalized;
-            playerVelocity.x = moveDir.x * speed;
-            playerVelocity.z = moveDir.z * speed;
+            playerVelocity.x = Mathf.Lerp(playerVelocity.x, moveDir.x * speed, acceleration);
+            playerVelocity.z = Mathf.Lerp(playerVelocity.z, moveDir.z * speed, acceleration);
             airborneVelocity.x = playerVelocity.x;
             airborneVelocity.z = playerVelocity.z;
         }
@@ -161,7 +165,6 @@ public class PlayerController : MonoBehaviour
         playerVelocity.y += gravity * Time.deltaTime;
         controller.Move(playerVelocity * Time.deltaTime);
     }
-
 
     void KeyboardInput()
     {
@@ -223,6 +226,21 @@ public class PlayerController : MonoBehaviour
         kicking = false;
     }
 
+    void UpdateAttackDamage()
+    {
+        if(!rightHand.GetComponent<BoxCollider>().enabled && PunchDoesDamage())
+        {
+            rightHand.GetComponent<BoxCollider>().enabled = true;
+            leftHand.GetComponent<BoxCollider>().enabled = true;
+        }
+
+        if(rightHand.GetComponent<BoxCollider>().enabled && !PunchDoesDamage())
+        {
+            rightHand.GetComponent<BoxCollider>().enabled = false;
+            leftHand.GetComponent<BoxCollider>().enabled = false;
+        }
+    }
+
     void UpdateMovementBools()
     {
         if (new Vector2(playerVelocity.x, playerVelocity.z).magnitude >= 0.05f)
@@ -269,6 +287,17 @@ public class PlayerController : MonoBehaviour
     {
         foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
             keycode = vKey;
+    }
+
+    bool PunchDoesDamage()
+    {
+        for(int i = 0; i < punchDoesDamageAnimations.Length; i++)
+        {
+            if (anim.GetCurrentAnimatorStateInfo(0).IsName(punchDoesDamageAnimations[i]))
+                return true;
+        }
+
+        return false;
     }
 
     bool ShouldSlow()

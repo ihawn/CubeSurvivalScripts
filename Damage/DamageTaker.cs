@@ -4,15 +4,21 @@ using UnityEngine;
 
 public class DamageTaker : MonoBehaviour
 {
-    public string[] damageTags;
     public float hp, maxHp, toughness, damageTick;
     public bool takeContinuousDamage;
-    bool canTakeDamage;
+    public bool canTakeDamage, hpBasedOnSize;
     public int id;
+
+    public GameObject[] dropOnDeath;
+    public float[] dropProbOnDeath;
+    public float[] dropMultOnDeath;
 
     private void Start()
     {
-        hp = maxHp;
+        if (hpBasedOnSize)
+            hp = 50*GetComponent<Renderer>().bounds.size.magnitude;
+        else
+            hp = maxHp;
         canTakeDamage = true;
     }
 
@@ -23,37 +29,34 @@ public class DamageTaker : MonoBehaviour
         canTakeDamage = true;
     }
 
+    private void Update()
+    {
+        CheckForDeath();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        print("collision");
-        //object was hit by something that can hurt it
-        if (canTakeDamage && System.Array.IndexOf(damageTags, other.gameObject.tag) != -1)
+        Damage(other.gameObject);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        Damage(collision.gameObject);
+    }
+
+    void Damage(GameObject hit)
+    {
+        if (canTakeDamage && hit.gameObject.GetComponent<DamageGiver>() != null)
         {
             if (!takeContinuousDamage)
             {
                 StartCoroutine(InvulnerabilityCounter());
             }
 
-            TakeDamage(other.gameObject);
-            CheckForDeath();
+            TakeDamage(hit.gameObject);
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        print("collision");
-        //object was hit by something that can hurt it
-        if (canTakeDamage && System.Array.IndexOf(damageTags, collision.gameObject.tag) != -1)
-        {
-            if(!takeContinuousDamage)
-            {
-                StartCoroutine(InvulnerabilityCounter());
-            }
-
-            TakeDamage(collision.gameObject);
-            CheckForDeath();
-        }
-    }
 
     void TakeDamage(GameObject g)
     {
@@ -68,6 +71,6 @@ public class DamageTaker : MonoBehaviour
 
     void Death()
     {
-        DeathTypes.Die(id);
+        DeathTypes.Die(this);
     }
 }
