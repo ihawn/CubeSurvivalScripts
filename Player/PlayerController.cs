@@ -44,6 +44,8 @@ public class PlayerController : MonoBehaviour
     public bool armed;
     public GameObject rightHand, leftHand;
 
+    public GameObject debrisParticles;
+
     private void Awake()
     {
         LockCurser();
