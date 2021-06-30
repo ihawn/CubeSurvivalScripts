@@ -13,7 +13,7 @@ public class DamageTaker : MonoBehaviour
     public float[] dropProbOnDeath;
     public float[] dropMultOnDeath;
 
-    public float damageSpeedThreshold, healthBarOffset;
+    public float damageSpeedThreshold, healthBarOffset, deathParticleSizeMultiplier, dropRateSizeMultiplier;
 
     GameObject healthBar;
 
@@ -87,6 +87,7 @@ public class DamageTaker : MonoBehaviour
                 healthBar = Instantiate(StaticObjects.gm.enemyHealthBar, pos + new Vector3(0f, healthBarOffset, 0f), Quaternion.identity);
                 healthBar.transform.parent = transform;
             }
+
 
             healthBar.GetComponent<HeathBarController>().SetHealth(hp, maxHp);
         }

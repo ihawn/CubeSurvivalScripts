@@ -20,7 +20,7 @@ public static class DeathTypes
 
         for(int i = 0; i < dt.dropOnDeath.Length; i++)
         {
-            for(int j = 0; j < dt.dropMultOnDeath[i]; j++)
+            for(int j = 0; j < dt.dropMultOnDeath[i]*dt.dropRateSizeMultiplier*dt.GetComponent<MeshRenderer>().bounds.size.magnitude; j++)
             {
                 if(Random.Range(0f,100f) <= dt.dropProbOnDeath[i])
                 {
@@ -28,6 +28,9 @@ public static class DeathTypes
                 }
             }
         }
+
+        GameObject part = GameObject.Instantiate(StaticObjects.gm.dustCloud, dt.transform.position, Quaternion.identity);
+        part.transform.localScale = dt.GetComponent<MeshRenderer>().bounds.size.magnitude * dt.deathParticleSizeMultiplier*Vector3.one;
 
         GameObject.Destroy(dt.gameObject);
     }
