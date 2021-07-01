@@ -10,10 +10,11 @@ public class TerrainControl : MonoBehaviour
     GameObject[][] cubes;
     public GameObject player;
     public StaticGenerator[] sg;
-    public float terrainDrawDistance, verticalOffset, terrainRiseSpeed;
+    public float terrainDrawDistance, verticalOffset, terrainRiseSpeed, popupDistance, falloff;
     public int cubesPerFrame;
     public float globalCubeWidth, seaLevel;
     public bool[] completedGeneration;
+
 
     public bool shouldUpdate;
     public float closeThreshold;
@@ -128,7 +129,7 @@ public class TerrainControl : MonoBehaviour
         {
             if (!cubes[i].activeInHierarchy &&
                 Vector2.Distance(new Vector2(player.transform.position.x, player.transform.position.z),
-                new Vector2(cubes[i].transform.position.x, cubes[i].transform.position.z)) <= terrainDrawDistance)
+                new Vector2(cubes[i].transform.position.x, cubes[i].transform.position.z)) <= terrainDrawDistance*3f)
             {
                 //move cube up
                 cubes[i].SetActive(true);

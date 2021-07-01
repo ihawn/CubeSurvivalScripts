@@ -13,7 +13,7 @@ public class DamageTaker : MonoBehaviour
     public float[] dropProbOnDeath;
     public float[] dropMultOnDeath;
 
-    public float damageSpeedThreshold, healthBarOffset, deathParticleSizeMultiplier, dropRateSizeMultiplier;
+    public float damageSpeedThreshold = 8f, healthBarOffset, deathParticleSizeMultiplier, dropRateSizeMultiplier;
 
     GameObject healthBar;
 
@@ -43,15 +43,15 @@ public class DamageTaker : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Damage(other.gameObject);
+        Damage(other.gameObject, other.gameObject.GetComponent<Collider>().ClosestPointOnBounds(transform.position));
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        Damage(collision.gameObject);
+        Damage(collision.gameObject, collision.contacts[0].point);
     }
 
-    void Damage(GameObject hit)
+    void Damage(GameObject hit, Vector3 hitPoint)
     {
         if (canTakeDamage && hit.gameObject.GetComponent<DamageGiver>() != null && hit.GetComponent<DamageGiver>().speed >= damageSpeedThreshold)
         {
@@ -64,9 +64,9 @@ public class DamageTaker : MonoBehaviour
 
             if(hasDebris)
             {
-                Vector3 debrisDirection = (hit.gameObject.transform.position - transform.position).normalized;
-                Quaternion debRot = Quaternion.Euler(debrisDirection);
-                GameObject debris = Instantiate(StaticObjects.player.debrisParticles, hit.transform.position, debRot);
+                Vector3 debrisDirection = (hit.gameObject.transform.position - transform.position).normalized*360f;
+                Quaternion debRot = Quaternion.Euler(debrisDirection + new Vector3(0f, 90f, 0f));
+                GameObject debris = Instantiate(StaticObjects.player.debrisParticles, hitPoint, debRot);
             }
 
 
@@ -84,8 +84,14 @@ public class DamageTaker : MonoBehaviour
                 else
                     Debug.Log("Healthbar raycast failed");
 
-                healthBar = Instantiate(StaticObjects.gm.enemyHealthBar, pos + new Vector3(0f, healthBarOffset, 0f), Quaternion.identity);
+                pos += new Vector3(0f, healthBarOffset, 0f);
+
+                pos = new Vector3((hit.transform.position.x + hitPoint.x) / 2, hit.transform.position.y + 2f, (hit.transform.position.z + hitPoint.z) / 2);
+
+                healthBar = Instantiate(StaticObjects.gm.enemyHealthBar, pos, Quaternion.identity);
+                healthBar.GetComponent<HeathBarController>().whoCreatedMe = gameObject;
                 healthBar.transform.parent = transform;
+                
             }
 
 

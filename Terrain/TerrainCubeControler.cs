@@ -25,7 +25,7 @@ public class TerrainCubeControler : MonoBehaviour
         if (downCo != null)
             StopCoroutine(downCo);
 
-        upCo = StartCoroutine(MoveToPosition());   
+        //upCo = StartCoroutine(MoveToPosition());   
     }
 
 
@@ -35,10 +35,24 @@ public class TerrainCubeControler : MonoBehaviour
             BirdsEyeDistance(theTerrainController.player, gameObject) > theTerrainController.terrainDrawDistance && 
             Vector3.Distance(transform.position, startPos) < 0.001f)
         {
+            
+
             if (upCo != null)
                 StopCoroutine(upCo);
 
-            downCo = StartCoroutine(MoveDown());
+            //downCo = StartCoroutine(MoveDown());
+        }
+
+        if (generationDone)
+        {
+            float dist = BirdsEyeDistance(theTerrainController.player, gameObject);
+
+            transform.position = new Vector3(transform.position.x,
+                   startPos.y-Mathf.Pow(Mathf.Max(dist, theTerrainController.falloff) - theTerrainController.falloff, 2)/theTerrainController.terrainDrawDistance,
+                 transform.position.z);
+
+            if (transform.position.y < startPos.y - theTerrainController.verticalOffset - 1f)
+                gameObject.SetActive(false);
         }
     }
 
@@ -47,7 +61,7 @@ public class TerrainCubeControler : MonoBehaviour
         return Vector2.Distance(new Vector2(p.transform.position.x, p.transform.position.z), new Vector2(c.transform.position.x, c.transform.position.z));
     }
 
-    IEnumerator MoveToPosition()
+   /* IEnumerator MoveToPosition()
     {
         while(Vector3.Distance(startPos, transform.position) > 0.001f)
         {
@@ -94,7 +108,7 @@ public class TerrainCubeControler : MonoBehaviour
 
         transform.position = pos;
         gameObject.SetActive(false);
-    }
+    }*/
 
     private void OnTriggerEnter(Collider other)
     {
