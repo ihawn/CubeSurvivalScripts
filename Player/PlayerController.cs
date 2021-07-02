@@ -29,7 +29,7 @@ public class PlayerController : MonoBehaviour
     public float walkSpeed, sensitivity, rotateSpeed, turnSmoothTime;
     float turnSmoothVelocity;
 
-    public bool running, grounded, jump, sprinting, hasWeapon, punching, shouldSlow, modifiedAttack, kicking;
+    public bool running, grounded, groundedRaw, jump, sprinting, hasWeapon, punching, shouldSlow, modifiedAttack, kicking;
     int attackID = 0;
 
     public CharacterController controller;
@@ -45,6 +45,9 @@ public class PlayerController : MonoBehaviour
     public GameObject rightHand, leftHand;
 
     public GameObject debrisParticles;
+
+    public float groundedDelay;
+    bool coRunning;
 
     private void Awake()
     {
@@ -90,7 +93,7 @@ public class PlayerController : MonoBehaviour
 
     void CheckGroundedState()
     {
-        Collider[] groundedCollider = Physics.OverlapSphere(groundedChecker.transform.position, groundedRadius);
+        /*Collider[] groundedCollider = Physics.OverlapSphere(groundedChecker.transform.position, groundedRadius);
 
         grounded = false;
 
@@ -98,7 +101,17 @@ public class PlayerController : MonoBehaviour
         {
             if (groundedCollider[i].gameObject.tag == "Ground" || groundedCollider[i].gameObject.tag == "Rock")
                 grounded = true;
+        }*/
+
+        groundedRaw = GetComponent<CharacterController>().isGrounded;
+
+        if (!groundedRaw)
+        {
+            if (!coRunning)
+                StartCoroutine(GroundedDenoise());
         }
+        else
+            grounded = groundedRaw;
     }
 
     void CheckInputs()
@@ -259,6 +272,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("Sprint", sprinting);
         anim.SetBool("Punching", punching);
         anim.SetBool("Kicking", kicking);
+        anim.SetFloat("VerticalSpeed", GetComponent<CharacterController>().velocity.y);
     }
 
     void UpdateItemSlotInput()
@@ -324,5 +338,16 @@ public class PlayerController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    IEnumerator GroundedDenoise()
+    {
+        coRunning = true;
+        print("coroutine running");
+        yield return new WaitForSeconds(groundedDelay);
+
+        if (!groundedRaw)
+            grounded = false;
+        coRunning = false;
     }
 }
