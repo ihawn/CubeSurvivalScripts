@@ -116,6 +116,17 @@ public class Inventory : MonoBehaviour
         return characterItems.Find(item => item.name == name);
     }
 
+    public Item ItemByName(string name)
+    {
+        for(int i = 0; i < itemDatabase.items.Capacity; i++)
+        {
+            if (itemDatabase.items[i].name == name)
+                return itemDatabase.items[i];
+        }
+
+        return null;
+    }
+
     public Recipe GetRecipe(string name)
     {
         return recipeDatabase.recipes.Find(recipe => recipe.whatToMake == name);
@@ -192,6 +203,17 @@ public class Inventory : MonoBehaviour
         }
 
         return true;
+    }
+
+    public bool CanTakeItem(Item item)
+    {      
+        for(int i = 0; i < visableInventory.Length; i++)
+        {
+            if (visableInventory[i] == item.name && visableInventoryQuantity[i] < item.stackSize)
+                return true;
+        }
+
+        return false;
     }
 
     public GameObject RetrieveGameObjectByName(string _name)

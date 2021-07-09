@@ -49,6 +49,11 @@ public class PlayerController : MonoBehaviour
     public float groundedDelay;
     bool coRunning;
 
+    public float throwChargeTimer;
+    public float medThrowChargeTime, bigThrowChargeTime;
+    public bool smallCharge, bigCharge, throwRelease = true, throwing;
+    public float throwForce;
+
     private void Awake()
     {
         LockCurser();
@@ -89,6 +94,11 @@ public class PlayerController : MonoBehaviour
         KeyboardInput();
         Movement(horizontalMove, verticalMove);
         UpdateAttackDamage();
+    }
+
+    private void LateUpdate()
+    {
+
     }
 
     void CheckGroundedState()
@@ -225,6 +235,8 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
+
+        UpdateThrow();
     }
 
     IEnumerator Punch()
@@ -273,6 +285,10 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("Punching", punching);
         anim.SetBool("Kicking", kicking);
         anim.SetFloat("VerticalSpeed", GetComponent<CharacterController>().velocity.y);
+        anim.SetBool("SmallCharge", smallCharge);
+        anim.SetBool("BigCharge", bigCharge);
+        anim.SetBool("ThrowRelease", throwRelease);
+        anim.SetBool("Throwing", throwing);
     }
 
     void UpdateItemSlotInput()
@@ -338,6 +354,44 @@ public class PlayerController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    public void UpdateThrow()
+    {
+        if (Input.GetButtonDown("Throw"))
+        {
+            throwing = true;
+            throwRelease = false;
+        }
+        if (Input.GetButtonUp("Throw"))
+        {
+            throwChargeTimer = 0;
+            ThrowObject();
+            throwing = false;
+            throwRelease = true;
+        }
+        if (throwChargeTimer >= medThrowChargeTime)
+            smallCharge = true;
+        else
+            smallCharge = false;
+        if (throwChargeTimer >= bigThrowChargeTime)
+            bigCharge = true;
+        else
+            bigCharge = false;
+        if(throwing)
+            throwChargeTimer += Time.deltaTime;
+    }
+
+    void ThrowObject()
+    {
+        if(inventoryUI.rightHandObject != null)
+        {
+            inventoryUI.rightHandObject.transform.parent = null;
+            inventoryUI.rightHandObject.AddComponent<Rigidbody>();
+            inventoryUI.rightHandObject.AddComponent<MeshCollider>();
+            inventoryUI.rightHandObject.GetComponent<MeshCollider>().convex = true;
+            inventoryUI.rightHandObject.GetComponent<Rigidbody>().AddForce(transform.forward.normalized * throwForce);
+        }
     }
 
     IEnumerator GroundedDenoise()

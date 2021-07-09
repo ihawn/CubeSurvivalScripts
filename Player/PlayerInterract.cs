@@ -41,7 +41,7 @@ public class PlayerInterract : MonoBehaviour
         if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out hit))
         {
             Debug.DrawRay(Cam.transform.position, Cam.transform.forward * hit.distance, Color.red);
-            Debug.Log("Looking at " + hit.transform.gameObject.tag);
+          //  Debug.Log("Looking at " + hit.transform.gameObject.tag);
 
             lookAt = hit.transform.gameObject;
             EnableIgnore(true);
