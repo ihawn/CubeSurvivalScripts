@@ -14,7 +14,7 @@ public class PlayerInterract : MonoBehaviour
     GameObject lookAt;
     public Camera Cam;
     public string crossHairHit;
-    public float messageDuration;
+    public float messageDuration, lookDistance;
 
     public bool inChoicesMenu;
 
@@ -36,12 +36,31 @@ public class PlayerInterract : MonoBehaviour
     {
         EnableIgnore(false);
 
+        /*   RaycastHit[] hits;
+           hits = Physics.RaycastAll(Cam.transform.position, Cam.transform.forward, lookDistance);
+
+           for(int i = 0; i < hits.Length; i++)
+           {
+               RaycastHit hit = hits[i];
+               print(hit.transform.gameObject);
+
+               for (int j = 0; j < ignoreTags.Length; j++)
+               {
+                   if (hit.transform.gameObject.tag != ignoreTags[j])
+                   {
+                       return hit.transform.gameObject.tag;
+                   }
+               }
+           }
+
+           return "";*/
+
         RaycastHit hit;
 
-        if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out hit))
+       if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out hit, lookDistance))
         {
             Debug.DrawRay(Cam.transform.position, Cam.transform.forward * hit.distance, Color.red);
-          //  Debug.Log("Looking at " + hit.transform.gameObject.tag);
+            Debug.Log("Looking at " + hit.transform.gameObject);
 
             lookAt = hit.transform.gameObject;
             EnableIgnore(true);

@@ -7,6 +7,8 @@ public class CameraController : MonoBehaviour
 {
     public CinemachineVirtualCamera vcamFar;
     public CinemachineFreeLook freeLookCamera;
+    public CinemachineFreeLook aimCam;
+    public PlayerController player;
     public Camera cam;
     public bool camClose = true;
 
@@ -21,9 +23,32 @@ public class CameraController : MonoBehaviour
 
         else
         {
+            if (player.throwing)
+                aimCam.Priority = 1;
+            else
+                freeLookCamera.Priority = 1;
             camClose = true;
-            freeLookCamera.Priority = 1;
-            vcamFar.Priority = 1;
+            vcamFar.Priority = 0;
+        }
+    }
+
+    public void SetAimCamera(bool aiming)
+    {
+        if (aiming && camClose)
+        {
+            if (aimCam.Priority == 0)
+            {
+                aimCam.Priority = 1;
+                freeLookCamera.Priority = 0;
+            }      
+        }
+        else if(!aiming && camClose)
+        {
+            if (aimCam.Priority == 1)
+            {
+                aimCam.Priority = 0;
+                freeLookCamera.Priority = 1;
+            }
         }
     }
 

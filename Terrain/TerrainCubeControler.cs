@@ -12,6 +12,7 @@ public class TerrainCubeControler : MonoBehaviour
 
     private void Awake()
     {
+        gameObject.layer = 15; 
         startPos = transform.position;
 
         if (gameObject.tag == "Ground")

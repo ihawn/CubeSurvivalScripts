@@ -16,7 +16,7 @@ public class Inventory : MonoBehaviour
     private void Start()
     {
         InitializeInventory();
-        GiveItem("Limestone", 50);
+        GiveItem("Limestone", 10);
         GiveItem("Quartz", 100);
   //      GiveItem("ObsidianKey", 10);
     }
@@ -209,7 +209,7 @@ public class Inventory : MonoBehaviour
     {      
         for(int i = 0; i < visableInventory.Length; i++)
         {
-            if (visableInventory[i] == item.name && visableInventoryQuantity[i] < item.stackSize)
+            if (visableInventory[i] == null || (visableInventory[i] == item.name && visableInventoryQuantity[i] < item.stackSize))
                 return true;
         }
 

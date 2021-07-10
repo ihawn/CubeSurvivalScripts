@@ -8,6 +8,8 @@ public class DamageGiver : MonoBehaviour
     public float dph;
     public float speed;
     Vector3 lastPos = Vector3.zero, currentPos = Vector3.zero;
+    public bool dpsDependsOnSpeed;
+    public float dphSpeedMultiplier;
 
     private void Update()
     {
@@ -19,5 +21,8 @@ public class DamageGiver : MonoBehaviour
         }
 
         lastPos = currentPos;
+
+        if (dpsDependsOnSpeed)
+            dph = speed * dphSpeedMultiplier;
     }
 }

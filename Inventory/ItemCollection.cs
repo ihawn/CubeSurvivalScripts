@@ -9,7 +9,6 @@ public class ItemCollection : MonoBehaviour
     public bool canCollect = true;
     public float canCollectDelay = 1f;
     public float lerpSpeed = 3f;
-    Item thisItem;
 
     public Vector3 rotationOffset, positionOffset;
 

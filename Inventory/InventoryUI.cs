@@ -42,9 +42,17 @@ public class InventoryUI : MonoBehaviour
 
     void UpdateInventoryUI()
     {
+        if (playerInventory.visableInventoryQuantity[selectedSlot] < 1)
+        {
+            playerInventory.visableInventory[selectedSlot] = null;
+            if (rightHandObject != null)
+                Destroy(rightHandObject);
+        }
+
         for (int i = 0; i < playerInventory.visableInventorySize; i++)
         {
-            if(playerInventory.visableInventory[i] != null)
+
+            if (playerInventory.visableInventory[i] != null)
             {
                 inventorySprites[i].sprite = playerInventory.CheckForItem(playerInventory.visableInventory[i]).icon;
                 inventorySprites[i].color = new Vector4(1f, 1f, 1f, 1f);
@@ -87,16 +95,19 @@ public class InventoryUI : MonoBehaviour
 
     void UpdateItemInHand()
     {
-        GameObject retrievedByName = playerInventory.RetrieveStaticPrefabByName(playerInventory.visableInventory[selectedSlot]);
-        Destroy(rightHandObject);
-
-        if (playerInventory.visableInventory[selectedSlot] != "" && retrievedByName != null)
+        if (playerInventory.visableInventory[selectedSlot] != null)
         {
-            rightHandObject = Instantiate(retrievedByName, rightHand.transform.position, rightHand.transform.rotation);
+            GameObject retrievedByName = playerInventory.RetrieveStaticPrefabByName(playerInventory.visableInventory[selectedSlot]);
+            Destroy(rightHandObject);
+
+            if (playerInventory.visableInventory[selectedSlot] != "" && retrievedByName != null)
+            {
+                rightHandObject = Instantiate(retrievedByName, rightHand.transform.position, rightHand.transform.rotation);
+            }
+
+            if (rightHandObject != null)
+                rightHandObject.transform.parent = rightHand;
         }
-        
-        if(rightHandObject != null)
-            rightHandObject.transform.parent = rightHand;
         
     }
 

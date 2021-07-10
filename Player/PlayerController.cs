@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.VFX;
 
 public class PlayerController : MonoBehaviour
 {
@@ -29,6 +30,7 @@ public class PlayerController : MonoBehaviour
     public float walkSpeed, sensitivity, rotateSpeed, turnSmoothTime;
     float turnSmoothVelocity;
 
+    public string[] tagsConsideredGround;
     public bool running, grounded, groundedRaw, jump, sprinting, hasWeapon, punching, shouldSlow, modifiedAttack, kicking;
     int attackID = 0;
 
@@ -49,13 +51,18 @@ public class PlayerController : MonoBehaviour
     public float groundedDelay;
     bool coRunning;
 
+    Inventory inventory;
+
     public float throwChargeTimer;
-    public float medThrowChargeTime, bigThrowChargeTime;
-    public bool smallCharge, bigCharge, throwRelease = true, throwing;
-    public float throwForce;
+    public float medThrowChargeTime, bigThrowChargeTime, shortThrowDelay;
+    public bool smallCharge, bigCharge, throwRelease = true, throwing, canThrow = true;
+    public float throwForce, medThrowForceMultiplier, bigThrowForceMultiplier, smallThrowDelay, medThrowDelay, maxThrowDelay;
+    public VisualEffect medChargeEffect, bigChargeEffect;
+    Coroutine canThrowCo;
 
     private void Awake()
     {
+        inventory = GetComponent<Inventory>();
         LockCurser();
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
@@ -103,21 +110,27 @@ public class PlayerController : MonoBehaviour
 
     void CheckGroundedState()
     {
-        /*Collider[] groundedCollider = Physics.OverlapSphere(groundedChecker.transform.position, groundedRadius);
-
-        grounded = false;
-
-        for(int i = 0; i < groundedCollider.Length; i++)
+        RaycastHit hit;
+        groundedRaw = false;
+        Debug.DrawRay(transform.position, -transform.up * groundedRadius, Color.blue);
+        if (Physics.Raycast(transform.position, -transform.up, out hit, groundedRadius))
         {
-            if (groundedCollider[i].gameObject.tag == "Ground" || groundedCollider[i].gameObject.tag == "Rock")
-                grounded = true;
-        }*/
+            for(int i = 0; i < tagsConsideredGround.Length; i++)
+            {
+                if(hit.transform.gameObject.tag == tagsConsideredGround[i])
+                {
+                    groundedRaw = true;
+                    break;
+                }
+            }
+        }
 
-        groundedRaw = GetComponent<CharacterController>().isGrounded;
+        //   groundedRaw = GetComponent<CharacterController>().isGrounded;
+
 
         if (!groundedRaw)
         {
-            if (!coRunning)
+        if (!coRunning)
                 StartCoroutine(GroundedDenoise());
         }
         else
@@ -147,8 +160,12 @@ public class PlayerController : MonoBehaviour
         else
             speed = runSpeed;
 
+        if(smallCharge || bigCharge)
+            transform.rotation = Quaternion.Euler(0f, cam.eulerAngles.y, 0f);
+
         if (direction.magnitude >= 0.1 && grounded && !shouldSlow)
         {
+           
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
 
@@ -358,20 +375,27 @@ public class PlayerController : MonoBehaviour
 
     public void UpdateThrow()
     {
-        if (Input.GetButtonDown("Throw"))
+        if (Input.GetButtonDown("Throw") && inventory.visableInventory[inventoryUI.selectedSlot] != null)
         {
             throwing = true;
             throwRelease = false;
         }
-        if (Input.GetButtonUp("Throw"))
+        if (Input.GetButtonUp("Throw") && throwing)
         {
+            if (canThrowCo != null)
+                StopCoroutine(canThrowCo);
+            canThrowCo = StartCoroutine(ThrowCooldown());
             throwChargeTimer = 0;
+
             ThrowObject();
             throwing = false;
             throwRelease = true;
         }
         if (throwChargeTimer >= medThrowChargeTime)
+        {
             smallCharge = true;
+            cameraControls.SetAimCamera(true);
+        }
         else
             smallCharge = false;
         if (throwChargeTimer >= bigThrowChargeTime)
@@ -380,28 +404,80 @@ public class PlayerController : MonoBehaviour
             bigCharge = false;
         if(throwing)
             throwChargeTimer += Time.deltaTime;
+
+        if (!smallCharge && !bigCharge)
+            cameraControls.SetAimCamera(false);
+
+        //Update charge effects
+        if (smallCharge && !bigCharge)
+        {
+            medChargeEffect.gameObject.SetActive(true);
+            medChargeEffect.SetFloat("GlobalSpawnRate", 1);
+        }
+        else
+        {
+            medChargeEffect.SetFloat("GlobalSpawnRate", 0);
+            medChargeEffect.gameObject.SetActive(false);
+        }
+        if (bigCharge)
+        {
+            bigChargeEffect.gameObject.SetActive(true);
+            bigChargeEffect.SetFloat("GlobalSpawnRate", 1);
+        }
+        else
+        {
+            bigChargeEffect.SetFloat("GlobalSpawnRate", 0);
+            bigChargeEffect.gameObject.SetActive(false);
+        }
     }
 
     void ThrowObject()
     {
         if(inventoryUI.rightHandObject != null)
         {
-            inventoryUI.rightHandObject.transform.parent = null;
-            inventoryUI.rightHandObject.AddComponent<Rigidbody>();
-            inventoryUI.rightHandObject.AddComponent<MeshCollider>();
-            inventoryUI.rightHandObject.GetComponent<MeshCollider>().convex = true;
-            inventoryUI.rightHandObject.GetComponent<Rigidbody>().AddForce(transform.forward.normalized * throwForce);
+            if (!smallCharge && !bigCharge)
+                StartCoroutine(ThrowDelay(smallThrowDelay, 1));
+            else if (smallCharge && !bigCharge)
+                StartCoroutine(ThrowDelay(medThrowDelay, medThrowForceMultiplier));
+            else if (bigCharge)
+                StartCoroutine(ThrowDelay(maxThrowDelay, bigThrowForceMultiplier));
+        }
+    }
+
+    IEnumerator ThrowCooldown()
+    {
+        canThrow = false;
+        yield return new WaitForSeconds(shortThrowDelay);
+        canThrow = true;
+    }
+
+    IEnumerator ThrowDelay(float delay, float multiplier)
+    {
+        yield return new WaitForSeconds(delay);
+        if (inventory.RetrieveGameObjectByName(inventory.visableInventory[inventoryUI.selectedSlot]) != null)
+        {
+            GameObject item = Instantiate(inventory.RetrieveGameObjectByName(inventory.visableInventory[inventoryUI.selectedSlot]),
+            inventoryUI.rightHandObject.transform.position, inventoryUI.rightHandObject.transform.rotation);
+            inventory.visableInventoryQuantity[inventoryUI.selectedSlot]--;
+            item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+            if(multiplier == 1 || !cameraControls.camClose)
+                item.GetComponent<Rigidbody>().AddForce(transform.forward * throwForce * multiplier);
+            else
+                item.GetComponent<Rigidbody>().AddForce(cam.transform.forward.normalized * throwForce * multiplier);
         }
     }
 
     IEnumerator GroundedDenoise()
     {
         coRunning = true;
-        print("coroutine running");
+
         yield return new WaitForSeconds(groundedDelay);
 
         if (!groundedRaw)
             grounded = false;
         coRunning = false;
     }
+
+
 }
