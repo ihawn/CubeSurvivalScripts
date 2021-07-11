@@ -10,7 +10,7 @@ public class TerrainControl : MonoBehaviour
     GameObject[][] cubes;
     public GameObject player;
     public StaticGenerator[] sg;
-    public float terrainDrawDistance, verticalOffset, terrainRiseSpeed, popupDistance, falloff;
+    public float terrainDrawDistance, verticalOffset, terrainRiseSpeed, popupDistance, falloff, power;
     public int cubesPerFrame;
     public float globalCubeWidth, seaLevel;
     public bool[] completedGeneration;

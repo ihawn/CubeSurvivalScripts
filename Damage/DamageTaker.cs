@@ -53,7 +53,10 @@ public class DamageTaker : MonoBehaviour
 
     void Damage(GameObject hit, Vector3 hitPoint)
     {
-        if (canTakeDamage && hit.gameObject.GetComponent<DamageGiver>() != null && hit.GetComponent<DamageGiver>().speed >= damageSpeedThreshold)
+        if (canTakeDamage && hit.gameObject.GetComponent<DamageGiver>() != null &&
+            ((hit.GetComponent<DamageGiver>().speed >= damageSpeedThreshold && !hit.GetComponent<DamageGiver>().overrideSpeedThreshold) || 
+            (hit.GetComponent<DamageGiver>().overrideSpeedThreshold && hit.GetComponent<DamageGiver>().speed >= hit.GetComponent<DamageGiver>().overriddenSpeedThreshold)) 
+            && !hit.GetComponent<DamageGiver>().dontGiveDamage)
         {
             if (!takeContinuousDamage)
             {

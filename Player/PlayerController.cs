@@ -6,6 +6,9 @@ using UnityEngine.VFX;
 
 public class PlayerController : MonoBehaviour
 {
+    Vector3 currentPos, lastPos = Vector3.zero;
+    float realSpeed;
+
     public string[] shouldSlowAnimations;
     public string[] punchDoesDamageAnimations;
 
@@ -44,7 +47,7 @@ public class PlayerController : MonoBehaviour
     float horizontalMove = 0f, verticalMove = 0f;
 
     public bool armed;
-    public GameObject rightHand, leftHand;
+    public GameObject rightHand, leftHand, rightFoot, leftFoot;
 
     public GameObject debrisParticles;
 
@@ -59,6 +62,7 @@ public class PlayerController : MonoBehaviour
     public float throwForce, medThrowForceMultiplier, bigThrowForceMultiplier, smallThrowDelay, medThrowDelay, maxThrowDelay;
     public VisualEffect medChargeEffect, bigChargeEffect;
     Coroutine canThrowCo;
+    public float thrownObjectOverrideSpeedThreshold;
 
     private void Awake()
     {
@@ -91,6 +95,16 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        //speed update
+        currentPos = transform.position;
+
+        if (lastPos != Vector3.zero)
+        {
+            realSpeed = (currentPos - lastPos).magnitude / Time.deltaTime;
+        }
+
+        lastPos = currentPos;
+
         CheckInputs();
         UpdateMovementBools();
         UpdatePlayerAnimations();
@@ -108,24 +122,34 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    void CheckGroundedState()
+    bool GroundedRayHitGround(Vector3 start)
     {
         RaycastHit hit;
-        groundedRaw = false;
-        Debug.DrawRay(transform.position, -transform.up * groundedRadius, Color.blue);
+        Debug.DrawRay(start + new Vector3(0f, 1f, 0f), -transform.up * groundedRadius, Color.blue);
         if (Physics.Raycast(transform.position, -transform.up, out hit, groundedRadius))
         {
-            for(int i = 0; i < tagsConsideredGround.Length; i++)
+            for (int i = 0; i < tagsConsideredGround.Length; i++)
             {
-                if(hit.transform.gameObject.tag == tagsConsideredGround[i])
+                if (hit.transform.gameObject.tag == tagsConsideredGround[i])
                 {
-                    groundedRaw = true;
-                    break;
+                    return true;
                 }
             }
         }
+        return false;
+    }
 
-        //   groundedRaw = GetComponent<CharacterController>().isGrounded;
+    void CheckGroundedState()
+    {
+        groundedRaw = false;
+        bool rightGrounded = false, leftGrounded = false, middleGrounded = false;
+
+        rightGrounded = GroundedRayHitGround(rightFoot.transform.position);
+        leftGrounded = GroundedRayHitGround(leftFoot.transform.position);
+        middleGrounded = GroundedRayHitGround(0.5f*(rightFoot.transform.position + leftFoot.transform.position));
+
+        if (leftGrounded || rightGrounded || middleGrounded || realSpeed < 1f)
+            groundedRaw = true;
 
 
         if (!groundedRaw)
@@ -240,7 +264,10 @@ public class PlayerController : MonoBehaviour
             else
             {
                 if (attackCo != null)
+                {
                     StopCoroutine(attackCo);
+                    punching = false;   
+                }
 
                 if (modifiedAttack)
                 {
@@ -259,14 +286,22 @@ public class PlayerController : MonoBehaviour
     IEnumerator Punch()
     {
         punching = true;
+        rightHand.GetComponent<DamageGiver>().dontGiveDamage = false;
+        leftHand.GetComponent<DamageGiver>().dontGiveDamage = false;
         yield return new WaitForSeconds(stopPunchingDelay);
+        rightHand.GetComponent<DamageGiver>().dontGiveDamage = true;
+        leftHand.GetComponent<DamageGiver>().dontGiveDamage = true;
         punching = false;
     }
 
     IEnumerator Kick()
     {
         kicking = true;
+        rightFoot.GetComponent<DamageGiver>().dontGiveDamage = false;
+        leftFoot.GetComponent<DamageGiver>().dontGiveDamage = false;
         yield return new WaitForSeconds(stopPunchingDelay);
+        rightFoot.GetComponent<DamageGiver>().dontGiveDamage = true;
+        leftFoot.GetComponent<DamageGiver>().dontGiveDamage = true;
         kicking = false;
     }
 
@@ -306,6 +341,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("BigCharge", bigCharge);
         anim.SetBool("ThrowRelease", throwRelease);
         anim.SetBool("Throwing", throwing);
+        anim.SetFloat("RealSpeed", realSpeed);
     }
 
     void UpdateItemSlotInput()
@@ -380,7 +416,7 @@ public class PlayerController : MonoBehaviour
             throwing = true;
             throwRelease = false;
         }
-        if (Input.GetButtonUp("Throw") && throwing)
+        if ((Input.GetButtonUp("Throw") || !Input.GetButton("Throw")) && throwing)
         {
             if (canThrowCo != null)
                 StopCoroutine(canThrowCo);
@@ -460,11 +496,18 @@ public class PlayerController : MonoBehaviour
             inventoryUI.rightHandObject.transform.position, inventoryUI.rightHandObject.transform.rotation);
             inventory.visableInventoryQuantity[inventoryUI.selectedSlot]--;
             item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Continuous;
+  
 
             if(multiplier == 1 || !cameraControls.camClose)
                 item.GetComponent<Rigidbody>().AddForce(transform.forward * throwForce * multiplier);
             else
                 item.GetComponent<Rigidbody>().AddForce(cam.transform.forward.normalized * throwForce * multiplier);
+
+            if (multiplier == 1)
+                item.GetComponent<DamageGiver>().dontGiveDamage = true;
+
+            item.GetComponent<DamageGiver>().overrideSpeedThreshold = true;
+            item.GetComponent<DamageGiver>().overriddenSpeedThreshold = thrownObjectOverrideSpeedThreshold;
         }
     }
 

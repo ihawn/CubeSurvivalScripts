@@ -12,7 +12,10 @@ public class PlayerInterract : MonoBehaviour
     public GameObject[] ignoreList;
     public GameObject[] choices;
     GameObject lookAt;
+    public PlayerController player;
+    public GameObject playerHand, aimFollow;
     public Camera Cam;
+    public Image crosshairWide;
     public string crossHairHit;
     public float messageDuration, lookDistance;
 
@@ -22,6 +25,7 @@ public class PlayerInterract : MonoBehaviour
     {
         crossHairHit = LookingAt();
         InterractChoice(crossHairHit);
+        UpdateCrossHair();
     }
 
     void EnableIgnore(bool enable)
@@ -36,31 +40,13 @@ public class PlayerInterract : MonoBehaviour
     {
         EnableIgnore(false);
 
-        /*   RaycastHit[] hits;
-           hits = Physics.RaycastAll(Cam.transform.position, Cam.transform.forward, lookDistance);
-
-           for(int i = 0; i < hits.Length; i++)
-           {
-               RaycastHit hit = hits[i];
-               print(hit.transform.gameObject);
-
-               for (int j = 0; j < ignoreTags.Length; j++)
-               {
-                   if (hit.transform.gameObject.tag != ignoreTags[j])
-                   {
-                       return hit.transform.gameObject.tag;
-                   }
-               }
-           }
-
-           return "";*/
 
         RaycastHit hit;
 
        if (Physics.Raycast(Cam.transform.position, Cam.transform.forward, out hit, lookDistance))
         {
             Debug.DrawRay(Cam.transform.position, Cam.transform.forward * hit.distance, Color.red);
-            Debug.Log("Looking at " + hit.transform.gameObject);
+           // Debug.Log("Looking at " + hit.transform.gameObject);
 
             lookAt = hit.transform.gameObject;
             EnableIgnore(true);
@@ -120,6 +106,28 @@ public class PlayerInterract : MonoBehaviour
 
     }
 
+
+    void UpdateCrossHair()
+    {
+        if (player.bigCharge || player.smallCharge)
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(aimFollow.transform.position, Cam.transform.forward, out hit, lookDistance*3))
+            {
+                transform.position = Vector3.Lerp(transform.position, Cam.WorldToScreenPoint(hit.point), 10f*Time.deltaTime);
+            }
+
+            if(player.bigCharge)
+                crosshairWide.gameObject.transform.localScale = Vector3.Lerp(crosshairWide.gameObject.transform.localScale, Vector3.one, 10f * Time.deltaTime);
+            if(player.smallCharge && !player.bigCharge)
+                crosshairWide.gameObject.transform.localScale = Vector3.Lerp(crosshairWide.gameObject.transform.localScale, Vector3.one*1.7f, 10f * Time.deltaTime);
+        }
+        else
+        {
+            transform.position = Vector3.Lerp(transform.position, new Vector3(Screen.width / 2, Screen.height / 2, 0f), 10f * Time.deltaTime);
+            crosshairWide.gameObject.transform.localScale = Vector3.Lerp(crosshairWide.gameObject.transform.localScale, Vector3.zero, 10f * Time.deltaTime);
+        }
+    }
 
 
     void InterractWithDoor()

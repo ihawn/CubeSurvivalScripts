@@ -9,16 +9,11 @@ public class StaticObjectController : MonoBehaviour
 
     private void Start()
     {
+        gameObject.layer = 16;
         size = Vector3.Magnitude(GetComponent<Renderer>().bounds.size);
-        StartCoroutine(DestroyDelay());
+        DestroyIfNearWall();
     }
 
-    IEnumerator DestroyDelay()
-    {
-        yield return new WaitForSeconds(0.2f);
-
-     //   DestroyIfTouchingLarger();
-    }
 
     void DestroyIfNearWall()
     {
@@ -28,7 +23,7 @@ public class StaticObjectController : MonoBehaviour
         {
             if (hitColliders[i].gameObject.tag == "Wall")
             {
-
+                Destroy(gameObject);
             }
         }
     }

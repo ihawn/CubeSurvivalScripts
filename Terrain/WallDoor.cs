@@ -14,9 +14,14 @@ public class WallDoor : MonoBehaviour
     public string keyholeMessage, keyholeMessage2;
     public bool noDoor;
 
+    private void Awake()
+    {
+
+        stairHeight = stairs.transform.position.y;
+    }
+
     private void Start()
     {
-        stairHeight = stairs.transform.position.y;
         stairs.transform.position = new Vector3(stairs.transform.position.x, stairHeight - stairOffset, stairs.transform.position.z);
     }
 

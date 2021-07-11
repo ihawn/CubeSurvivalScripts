@@ -61,10 +61,6 @@ public class HeathBarController : MonoBehaviour
         health.transform.localScale = new Vector3(scaleOnDamage,
             scaleOnDamage, (h / maxHealth) * startScaleZ);
 
-        print(h);
-        print(maxHealth);
-        print(h / maxHealth);
-        print(startScaleZ);
     }
 
     float OverheadDistance(Vector3 v1, Vector3 v2)

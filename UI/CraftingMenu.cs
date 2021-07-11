@@ -54,7 +54,8 @@ public class CraftingMenu : MonoBehaviour
         else
         {
             activeTile = tileController;
-            tileController.backTile.SetButtonActive(false);
+            if(tileController.backTile != null)
+                tileController.backTile.SetButtonActive(false);
         }
 
         for (int i = 0; i < branchedTiles.Count; i++)

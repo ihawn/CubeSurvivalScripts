@@ -12,8 +12,10 @@ public class TileController : MonoBehaviour
 
     private void OnEnable()
     {
-        if(!isRoot)
+        if (!isRoot)
             SetButtonActive(false);
+        else
+            SetButtonActive(true);
     }
 
     public void SetButtonActive(bool b)
