@@ -24,10 +24,15 @@ public class PortalController : MonoBehaviour
     Quaternion[] rockStartRotation;
     public float rockLerpSpeed, rockPulseSpeed, rockPulseEpsilon, sigma, mu;
     public Vector3 minRockRange, maxRockRange;
-    public float playerDistanceThreshold;
+    public float playerDistanceThreshold, vertOffset;
+    public Vector3 realPos;
 
     public string[] canPortalList;
 
+    private void Awake()
+    {
+        realPos = transform.position + vertOffset*Vector3.up;
+    }
 
     private void Start()
     {
@@ -44,7 +49,9 @@ public class PortalController : MonoBehaviour
         if(activatePortalNextFrame && !portalActive)
         {
             ActivatePortal();
-            connectedPortal.ActivatePortal();
+
+            if(connectedPortal.isActiveAndEnabled)
+                connectedPortal.ActivatePortal();
         }
 
         if(portalActive && doneActivating)
@@ -182,27 +189,13 @@ public class PortalController : MonoBehaviour
         else
             return false;
     }
+    
 
-    void Teleport(GameObject portalee)
-    {
-        if(portalee.GetComponent<CharacterController>() != null)
-            portalee.GetComponent<CharacterController>().enabled = false;
-        
-
-        portalee.transform.position = connectedPortal.portalTo.position;
-        portalee.transform.rotation = Quaternion.Euler(connectedPortal.transform.rotation.eulerAngles);
-        connectedPortal.speedSlack = 1f;
-        tc.InitializeCubeLists();
-
-        if (portalee.GetComponent<CharacterController>() != null)
-            portalee.GetComponent<CharacterController>().enabled = true; ;
-        
-    }
 
     private void OnTriggerEnter(Collider other)
     {
         if (portalActive && doneActivating && CollisionCanTeleport(other.gameObject.tag))
-            Teleport(other.gameObject);
+            StaticObjects.pm.StartCoroutine(StaticObjects.pm.Teleport(other.gameObject, connectedPortal));
     }
 
     

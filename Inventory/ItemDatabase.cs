@@ -46,7 +46,7 @@ public class ItemDatabase : MonoBehaviour
                     {"Value", 100 }
                 }),
 
-                new Item(3, 64, "OakFloor", "A sturdy oaken floor", inventoryIcons[2],
+                new Item(3, 256, "OakWood", "A sturdy oaken branch", inventoryIcons[3],
                 new Dictionary<string, int>
                 {
                     {"Strength", 10 },
