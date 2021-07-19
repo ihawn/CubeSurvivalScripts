@@ -9,6 +9,7 @@ public class StaticObjects : MonoBehaviour
     public static GameManager gm;
     public static TerrainControl tc;
     public static PortalMaster pm;
+    public static CameraController cc;
 
     private void Awake()
     {
@@ -16,6 +17,7 @@ public class StaticObjects : MonoBehaviour
         gm = FindObjectOfType<GameManager>();
         tc = FindObjectOfType<TerrainControl>();
         pm = FindObjectOfType<PortalMaster>();
+        cc = FindObjectOfType<CameraController>();
         mainCam = player.cam;
     }
 }

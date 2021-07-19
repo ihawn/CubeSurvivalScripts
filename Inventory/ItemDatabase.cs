@@ -26,31 +26,39 @@ public class ItemDatabase : MonoBehaviour
     {
         items = new List<Item>
         {
-                new Item(0, 256, "Limestone", "A good stone for building", inventoryIcons[0],
+                new Item(0, 256, false, "Limestone", "A good stone for building", inventoryIcons[0],
                 new Dictionary<string, int>
                 {
                     {"Strength", 16},
                     {"Durability", 10 }
                 }),
 
-                new Item(1, 256, "Quartz", "A white crystal. It emits a faint glow", inventoryIcons[1],
+                new Item(1, 256, false, "Quartz", "A white crystal. It emits a faint glow", inventoryIcons[1],
                 new Dictionary<string, int>
                 {
                     {"Magic", 1},
                     {"Value", 10 }
                 }),
 
-                new Item(2, 16, "ObsidianKey", "A dark colored reflective key. Its color matches that of the walls", inventoryIcons[2],
+                new Item(2, 16, false, "ObsidianKey", "A dark colored reflective key. Its color matches that of the walls", inventoryIcons[2],
                 new Dictionary<string, int>
                 {
                     {"Value", 100 }
                 }),
 
-                new Item(3, 256, "OakWood", "A sturdy oaken branch", inventoryIcons[3],
+                new Item(3, 256, false, "OakWood", "A sturdy oaken branch", inventoryIcons[3],
                 new Dictionary<string, int>
                 {
                     {"Strength", 10 },
                     {"Durability", 10 }
+                }),
+
+                new Item(4, 1, true, "IronAxe", "Slightly chipped but gets the job done", inventoryIcons[4],
+                new Dictionary<string, int>
+                {
+                    {"Strength", 10 },
+                    {"Durability", 10 },
+                    {"DPH", 10}
                 })
         };
     }

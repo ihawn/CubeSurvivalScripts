@@ -15,10 +15,15 @@ public class DamageTaker : MonoBehaviour
 
     public float damageSpeedThreshold = 8f, healthBarOffset, deathParticleSizeMultiplier, dropRateSizeMultiplier;
 
+    public bool hasScaleAnimation = true;
+    public float scaleAnimMult = 1.02f, startScale, lerpSpeed = 5f;
+
     GameObject healthBar;
 
     private void Start()
     {
+        startScale = transform.localScale.x;
+
         if (hpBasedOnSize)
         {
             hp = 50 * GetComponent<Renderer>().bounds.size.magnitude;
@@ -39,9 +44,10 @@ public class DamageTaker : MonoBehaviour
     private void Update()
     {
         CheckForDeath();
+        UpdateScaleAnim();
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         Damage(other.gameObject, other.gameObject.GetComponent<Collider>().ClosestPointOnBounds(transform.position));
     }
@@ -53,10 +59,16 @@ public class DamageTaker : MonoBehaviour
 
     void Damage(GameObject hit, Vector3 hitPoint)
     {
+
+        if (hit.gameObject.GetComponent<DamageGiver>() != null)
+            print("Damage");
+
         if (canTakeDamage && hit.gameObject.GetComponent<DamageGiver>() != null &&
             ((hit.GetComponent<DamageGiver>().speed >= damageSpeedThreshold && !hit.GetComponent<DamageGiver>().overrideSpeedThreshold) || 
             (hit.GetComponent<DamageGiver>().overrideSpeedThreshold && hit.GetComponent<DamageGiver>().speed >= hit.GetComponent<DamageGiver>().overriddenSpeedThreshold)) 
             && !hit.GetComponent<DamageGiver>().dontGiveDamage)
+
+           
         {
             if (!takeContinuousDamage)
             {
@@ -70,6 +82,11 @@ public class DamageTaker : MonoBehaviour
                 Vector3 debrisDirection = (hit.gameObject.transform.position - transform.position).normalized*360f;
                 Quaternion debRot = Quaternion.Euler(debrisDirection + new Vector3(0f, 90f, 0f));
                 GameObject debris = Instantiate(StaticObjects.player.debrisParticles, hitPoint, debRot);
+            }
+
+            if(hasScaleAnimation)
+            {
+                transform.localScale = startScale * scaleAnimMult * Vector3.one;
             }
 
 
@@ -117,5 +134,13 @@ public class DamageTaker : MonoBehaviour
     void Death()
     {
         DeathTypes.Die(this);
+    }
+
+    void UpdateScaleAnim()
+    {
+        if(hasScaleAnimation)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * startScale, lerpSpeed * Time.deltaTime);
+        }
     }
 }

@@ -45,10 +45,11 @@ public class TerrainCubeControler : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.GetComponent<TerrainChild>() != null)
+        if (other.gameObject.GetComponent<TerrainChild>() != null && !other.gameObject.GetComponent<TerrainChild>().hasParent)
         {
             childList.Add(other.gameObject);
             other.transform.parent = gameObject.transform;
+            other.gameObject.GetComponent<TerrainChild>().hasParent = true;
         }
     }
 }

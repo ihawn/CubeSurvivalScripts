@@ -6,6 +6,8 @@ using UnityEngine.VFX;
 
 public class PlayerController : MonoBehaviour
 {
+    public Item currentSelection;
+
     Vector3 currentPos, lastPos = Vector3.zero;
     float realSpeed;
 
@@ -34,11 +36,15 @@ public class PlayerController : MonoBehaviour
     float turnSmoothVelocity;
 
     public string[] tagsConsideredGround;
-    public bool running, grounded, groundedRaw, jump, sprinting, hasWeapon, punching, shouldSlow, modifiedAttack, kicking;
+    public bool running, grounded, groundedRaw, jump, sprinting, hasWeapon, punching,
+        shouldSlow, modifiedAttack, kicking, rolling, goingLeft, goingRight;
     int attackID = 0;
 
     public CharacterController controller;
-    public float speed = 6f, runSpeed = 6f, sprintSpeed = 12f, gravity = -9.81f, jumpHeight = 1f, groundedRadius = 0.8f, playerDecell = 0.75f, stopPunchingDelay = 0.5f, acceleration = 1f;
+    public float speed = 6f, runSpeed = 6f, sprintSpeed = 12f, gravity = -9.81f, jumpHeight = 1f, groundedRadius = 0.8f, playerDecell = 0.75f,  acceleration = 1f;
+
+
+    public float startPunchingDelay, stopPunchingDelay, startKickingDelay, stopKickingDelay, startAxingDelay, stopAxingDelay;
 
     KeyCode keycode;
     public Vector3 playerVelocity, airborneVelocity;
@@ -63,6 +69,10 @@ public class PlayerController : MonoBehaviour
     public VisualEffect medChargeEffect, bigChargeEffect;
     Coroutine canThrowCo;
     public float thrownObjectOverrideSpeedThreshold;
+
+    public GameObject portalSparkle;
+
+
 
     private void Awake()
     {
@@ -95,6 +105,17 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        hasWeapon = WeaponActive();
+
+        try
+        {
+            currentSelection = inventory.ItemByName(inventory.visableInventory[inventoryUI.selectedSlot]);
+        }
+        catch
+        {
+            currentSelection = null;
+        }
+
         //speed update
         currentPos = transform.position;
 
@@ -234,6 +255,23 @@ public class PlayerController : MonoBehaviour
 
     void KeyboardInput()
     {
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            goingLeft = true;
+            goingRight = false;
+        }
+        if (Input.GetKeyUp(KeyCode.A))
+            goingLeft = false;
+        if(Input.GetKeyDown(KeyCode.D))
+        {
+            goingRight = true;
+            goingLeft = false;
+        }
+        if (Input.GetKeyUp(KeyCode.D))
+            goingRight = false;
+
+
+
         horizontalMove = Input.GetAxisRaw("Horizontal");
         verticalMove = Input.GetAxisRaw("Vertical");
         
@@ -243,8 +281,8 @@ public class PlayerController : MonoBehaviour
         else
             sprinting = false;
 
-
-        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+         
+        if (Input.GetKeyDown(KeyCode.Space) && grounded && !rolling && !modifiedAttack)
         {
             playerVelocity.y += Mathf.Sqrt(jumpHeight * -3.0f * gravity);
             jump = true;
@@ -255,27 +293,33 @@ public class PlayerController : MonoBehaviour
         else
             modifiedAttack = false;
 
+        if (Input.GetKeyDown(KeyCode.Space) && grounded && modifiedAttack)
+        {
+            StartCoroutine(DelayFalsify(0.2f));
+            rolling = true;
+        }
+
         if(Input.GetMouseButtonDown(0))
         {
-            if(hasWeapon)
+            if (attackCo != null)
             {
-                //todo
+                StopCoroutine(attackCo);
+                punching = false;
+            }
+
+            if (hasWeapon)
+            {
+                attackCo = StartCoroutine(Punch(new GameObject[] { inventoryUI.rightHandObject.transform.GetChild(0).gameObject }, startAxingDelay, stopAxingDelay, false));
             }
             else
             {
-                if (attackCo != null)
-                {
-                    StopCoroutine(attackCo);
-                    punching = false;   
-                }
-
                 if (modifiedAttack)
                 {
                     attackCo = StartCoroutine(Kick());
                 }
                 else
                 {
-                    attackCo = StartCoroutine(Punch());
+                    attackCo = StartCoroutine(Punch(new GameObject[] { rightHand, leftHand }, startPunchingDelay, stopPunchingDelay, true));
                 }
             }
         }
@@ -283,23 +327,36 @@ public class PlayerController : MonoBehaviour
         UpdateThrow();
     }
 
-    IEnumerator Punch()
+    IEnumerator Punch(GameObject[] dmgObjs, float start, float stop, bool controlDamage)
     {
+     
         punching = true;
-        rightHand.GetComponent<DamageGiver>().dontGiveDamage = false;
-        leftHand.GetComponent<DamageGiver>().dontGiveDamage = false;
-        yield return new WaitForSeconds(stopPunchingDelay);
-        rightHand.GetComponent<DamageGiver>().dontGiveDamage = true;
-        leftHand.GetComponent<DamageGiver>().dontGiveDamage = true;
+
+        yield return new WaitForSeconds(start);
+
+        if(controlDamage)
+            for (int i = 0; i < dmgObjs.Length; i++)
+                if(dmgObjs[i].GetComponent<DamageGiver>() != null)
+                    dmgObjs[i].GetComponent<DamageGiver>().dontGiveDamage = false;
+
+
+        yield return new WaitForSeconds(stop);
+
+        if(controlDamage)
+            for (int i = 0; i < dmgObjs.Length; i++)
+                if (dmgObjs[i].GetComponent<DamageGiver>() != null)
+                    dmgObjs[i].GetComponent<DamageGiver>().dontGiveDamage = true;
+
         punching = false;
     }
 
     IEnumerator Kick()
     {
         kicking = true;
+        yield return new WaitForSeconds(startKickingDelay);
         rightFoot.GetComponent<DamageGiver>().dontGiveDamage = false;
         leftFoot.GetComponent<DamageGiver>().dontGiveDamage = false;
-        yield return new WaitForSeconds(stopPunchingDelay);
+        yield return new WaitForSeconds(stopKickingDelay);
         rightFoot.GetComponent<DamageGiver>().dontGiveDamage = true;
         leftFoot.GetComponent<DamageGiver>().dontGiveDamage = true;
         kicking = false;
@@ -342,6 +399,10 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("ThrowRelease", throwRelease);
         anim.SetBool("Throwing", throwing);
         anim.SetFloat("RealSpeed", realSpeed);
+        anim.SetBool("Rolling", rolling);
+        anim.SetBool("GoingRight", goingRight);
+        anim.SetBool("GoingLeft", goingLeft);
+        anim.SetBool("HasWeapon", hasWeapon);
     }
 
     void UpdateItemSlotInput()
@@ -480,6 +541,19 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    bool WeaponActive()
+    {
+        if (currentSelection != null)
+        {
+            if (currentSelection.isWeapon)
+                return true;
+            else
+                return false;
+        }
+
+        return false;
+    }
+
     IEnumerator ThrowCooldown()
     {
         canThrow = false;
@@ -522,5 +596,10 @@ public class PlayerController : MonoBehaviour
         coRunning = false;
     }
 
+    IEnumerator DelayFalsify(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        rolling = false;
+    }
 
 }

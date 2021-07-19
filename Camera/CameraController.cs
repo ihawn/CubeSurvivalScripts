@@ -32,6 +32,26 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    public void SetViewCamera(bool far)
+    {
+        if (far)
+        {
+            camClose = false;
+            freeLookCamera.Priority = 0;
+            vcamFar.Priority = 1;
+        }
+
+        else
+        {
+            if (player.throwing)
+                aimCam.Priority = 1;
+            else
+                freeLookCamera.Priority = 1;
+            camClose = true;
+            vcamFar.Priority = 0;
+        }
+    }
+
     public void SetAimCamera(bool aiming)
     {
         if (aiming && camClose)

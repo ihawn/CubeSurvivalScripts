@@ -6,6 +6,7 @@ public class TerrainChild : MonoBehaviour
 {
     public bool hasRigidbody;
     public bool hasKinematicRigidbody;
+    public bool hasParent;
 
     private void Start()
     {

@@ -50,8 +50,7 @@ public class PortalController : MonoBehaviour
         {
             ActivatePortal();
 
-            if(connectedPortal.isActiveAndEnabled)
-                connectedPortal.ActivatePortal();
+            connectedPortal.activatePortalNextFrame = true;
         }
 
         if(portalActive && doneActivating)

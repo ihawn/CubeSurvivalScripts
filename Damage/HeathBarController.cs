@@ -51,8 +51,13 @@ public class HeathBarController : MonoBehaviour
         float x = radius * Mathf.Cos(theta);
         float z = radius * Mathf.Sin(theta);
 
-        transform.position = new Vector3(whoCreatedMe.transform.position.x, 0f, whoCreatedMe.transform.position.z) +
+        try
+        {
+            transform.position = new Vector3(whoCreatedMe.transform.position.x, 0f, whoCreatedMe.transform.position.z) +
             new Vector3(x, transform.position.y, z);
+        }
+        catch { }
+
 
     }
 
