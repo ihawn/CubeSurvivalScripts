@@ -5,13 +5,15 @@ using UnityEngine;
 public class StaticObjectController : MonoBehaviour
 {
     public float size;
-    public bool destroyIfTouchOwnKind;
+    public bool destroyIfTouchOwnKind, destroyIfTouchLarger;
 
     private void Start()
     {
         gameObject.layer = 16;
         size = Vector3.Magnitude(GetComponent<Renderer>().bounds.size);
         DestroyIfNearWall();
+        if (destroyIfTouchLarger)
+            DestroyIfTouchingLarger();
     }
 
 

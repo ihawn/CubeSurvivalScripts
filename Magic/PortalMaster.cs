@@ -23,7 +23,6 @@ public class PortalMaster : MonoBehaviour
 
         while (Vector3.Distance(portalee.transform.position, connectedPortal.realPos) > 1f)
         {
-            StaticObjects.tc.InitializeCubeLists();
             portalee.transform.position = Vector3.MoveTowards(portalee.transform.position, connectedPortal.realPos, portalSpeed * Time.deltaTime);
             yield return null;
         }

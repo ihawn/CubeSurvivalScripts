@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.VFX;
+using Cinemachine;
 
 public class PlayerController : MonoBehaviour
 {
+    public CinemachineFreeLook closeCam;
+
     public Item currentSelection;
 
     Vector3 currentPos, lastPos = Vector3.zero;
@@ -36,15 +39,15 @@ public class PlayerController : MonoBehaviour
     float turnSmoothVelocity;
 
     public string[] tagsConsideredGround;
-    public bool running, grounded, groundedRaw, jump, sprinting, hasWeapon, punching,
-        shouldSlow, modifiedAttack, kicking, rolling, goingLeft, goingRight;
+    public bool running, grounded, groundedRaw, jump, sprinting, hasWeapon, melee,
+        shouldSlow, modifiedAttack, rolling, goingLeft, goingRight;
     int attackID = 0;
 
     public CharacterController controller;
     public float speed = 6f, runSpeed = 6f, sprintSpeed = 12f, gravity = -9.81f, jumpHeight = 1f, groundedRadius = 0.8f, playerDecell = 0.75f,  acceleration = 1f;
 
 
-    public float startPunchingDelay, stopPunchingDelay, startKickingDelay, stopKickingDelay, startAxingDelay, stopAxingDelay;
+    public float attackTime = 0.2f;
 
     KeyCode keycode;
     public Vector3 playerVelocity, airborneVelocity;
@@ -64,7 +67,7 @@ public class PlayerController : MonoBehaviour
 
     public float throwChargeTimer;
     public float medThrowChargeTime, bigThrowChargeTime, shortThrowDelay;
-    public bool smallCharge, bigCharge, throwRelease = true, throwing, canThrow = true;
+    public bool smallCharge, bigCharge, throwRelease = true, throwing, smallThrow, canThrow = true;
     public float throwForce, medThrowForceMultiplier, bigThrowForceMultiplier, smallThrowDelay, medThrowDelay, maxThrowDelay;
     public VisualEffect medChargeEffect, bigChargeEffect;
     Coroutine canThrowCo;
@@ -72,10 +75,15 @@ public class PlayerController : MonoBehaviour
 
     public GameObject portalSparkle;
 
+    public Grabber rightHandGrabber;
+
+    bool pressedQ;
 
 
     private void Awake()
     {
+
+        rightHandGrabber = GetComponent<Grabber>();
         inventory = GetComponent<Inventory>();
         LockCurser();
         anim = GetComponent<Animator>();
@@ -91,6 +99,12 @@ public class PlayerController : MonoBehaviour
         controls.Gameplay.RotatePlayerController.canceled += ctx => rotate = Vector2.zero;
 
         controls.Gameplay.ChangeViewController.performed += ctx => cameraControls.ToggleViewCamera();
+   
+    }
+
+    private void Start()
+    {
+
     }
 
     private void OnEnable()
@@ -105,6 +119,18 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+
+        if(inventoryUI.rightHandObject != null)
+        {
+            rightHandGrabber.rightHandObj = inventoryUI.rightHandObject.transform;
+            rightHandGrabber.lookObj = inventoryUI.rightHandObject.transform;
+        }
+        else
+        {
+            rightHandGrabber.rightHandObj = null;
+            rightHandGrabber.lookObj = null;
+        }
+
         hasWeapon = WeaponActive();
 
         try
@@ -136,6 +162,7 @@ public class PlayerController : MonoBehaviour
         KeyboardInput();
         Movement(horizontalMove, verticalMove);
         UpdateAttackDamage();
+        UpdateAttackCurves();
     }
 
     private void LateUpdate()
@@ -205,7 +232,7 @@ public class PlayerController : MonoBehaviour
         else
             speed = runSpeed;
 
-        if(smallCharge || bigCharge)
+        if(smallCharge || bigCharge && !smallThrow)
             transform.rotation = Quaternion.Euler(0f, cam.eulerAngles.y, 0f);
 
         if (direction.magnitude >= 0.1 && grounded && !shouldSlow)
@@ -299,27 +326,27 @@ public class PlayerController : MonoBehaviour
             rolling = true;
         }
 
-        if(Input.GetMouseButtonDown(0))
+        if(Input.GetMouseButtonDown(0) && !theUIController.inMenus)
         {
             if (attackCo != null)
             {
                 StopCoroutine(attackCo);
-                punching = false;
+                melee = false;
             }
+
+            attackCo = StartCoroutine(Melee(attackTime));
 
             if (hasWeapon)
             {
-                attackCo = StartCoroutine(Punch(new GameObject[] { inventoryUI.rightHandObject.transform.GetChild(0).gameObject }, startAxingDelay, stopAxingDelay, false));
+                
             }
             else
             {
                 if (modifiedAttack)
                 {
-                    attackCo = StartCoroutine(Kick());
                 }
                 else
                 {
-                    attackCo = StartCoroutine(Punch(new GameObject[] { rightHand, leftHand }, startPunchingDelay, stopPunchingDelay, true));
                 }
             }
         }
@@ -327,39 +354,55 @@ public class PlayerController : MonoBehaviour
         UpdateThrow();
     }
 
-    IEnumerator Punch(GameObject[] dmgObjs, float start, float stop, bool controlDamage)
-    {
-     
-        punching = true;
-
-        yield return new WaitForSeconds(start);
-
-        if(controlDamage)
-            for (int i = 0; i < dmgObjs.Length; i++)
-                if(dmgObjs[i].GetComponent<DamageGiver>() != null)
-                    dmgObjs[i].GetComponent<DamageGiver>().dontGiveDamage = false;
-
-
-        yield return new WaitForSeconds(stop);
-
-        if(controlDamage)
-            for (int i = 0; i < dmgObjs.Length; i++)
-                if (dmgObjs[i].GetComponent<DamageGiver>() != null)
-                    dmgObjs[i].GetComponent<DamageGiver>().dontGiveDamage = true;
-
-        punching = false;
+    IEnumerator Melee(float time)
+    {   
+        melee = true;
+        yield return new WaitForSeconds(time);
+        melee = false;
     }
 
-    IEnumerator Kick()
+    void UpdateAttackCurves()
     {
-        kicking = true;
-        yield return new WaitForSeconds(startKickingDelay);
-        rightFoot.GetComponent<DamageGiver>().dontGiveDamage = false;
-        leftFoot.GetComponent<DamageGiver>().dontGiveDamage = false;
-        yield return new WaitForSeconds(stopKickingDelay);
-        rightFoot.GetComponent<DamageGiver>().dontGiveDamage = true;
-        leftFoot.GetComponent<DamageGiver>().dontGiveDamage = true;
-        kicking = false;
+        //Melee 
+        if (inventoryUI.rightHandObject != null && inventoryUI.rightHandObject.transform.childCount > 0)
+        {
+            DamageGiver meleeDamager = inventoryUI.rightHandObject.transform.GetChild(0).GetComponent<DamageGiver>();
+            if (meleeDamager != null)
+            {
+                if (anim.GetFloat("MeleeCurve") < 0.5)
+                    meleeDamager.dontGiveDamage = true;
+                else
+                    meleeDamager.dontGiveDamage = false;
+            }
+        }
+
+        //Right hand
+        DamageGiver rh = rightHand.GetComponent<DamageGiver>();
+        if (anim.GetFloat("RHCurve") < 0.5)
+            rh.dontGiveDamage = true;
+        else
+            rh.dontGiveDamage = false;
+
+        //Left hand
+        DamageGiver lh = leftHand.GetComponent<DamageGiver>();
+        if (anim.GetFloat("LHCurve") < 0.5)
+            lh.dontGiveDamage = true;
+        else
+            lh.dontGiveDamage = false;
+
+        //Right foot
+        DamageGiver rf = rightFoot.GetComponent<DamageGiver>();
+        if (anim.GetFloat("RFCurve") < 0.5)
+            rf.dontGiveDamage = true;
+        else
+            rf.dontGiveDamage = false;
+
+        //Left hand
+        DamageGiver lf = leftFoot.GetComponent<DamageGiver>();
+        if (anim.GetFloat("LFCurve") < 0.5)
+            lf.dontGiveDamage = true;
+        else
+            lf.dontGiveDamage = false;
     }
 
     void UpdateAttackDamage()
@@ -391,8 +434,8 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("Grounded", grounded);
         anim.SetBool("Jump", jump);
         anim.SetBool("Sprint", sprinting);
-        anim.SetBool("Punching", punching);
-        anim.SetBool("Kicking", kicking);
+        anim.SetBool("Melee", melee);
+        anim.SetBool("ModifiedAttack", modifiedAttack);
         anim.SetFloat("VerticalSpeed", GetComponent<CharacterController>().velocity.y);
         anim.SetBool("SmallCharge", smallCharge);
         anim.SetBool("BigCharge", bigCharge);
@@ -403,6 +446,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("GoingRight", goingRight);
         anim.SetBool("GoingLeft", goingLeft);
         anim.SetBool("HasWeapon", hasWeapon);
+        anim.SetBool("SmallThrow", smallThrow);
     }
 
     void UpdateItemSlotInput()
@@ -457,7 +501,7 @@ public class PlayerController : MonoBehaviour
         
         return false;
     }
-
+    
     public void UnlockCurser()
     {
         Cursor.lockState = CursorLockMode.None;
@@ -476,15 +520,20 @@ public class PlayerController : MonoBehaviour
         {
             throwing = true;
             throwRelease = false;
+            pressedQ = true;
         }
-        if ((Input.GetButtonUp("Throw") || !Input.GetButton("Throw")) && throwing)
+        if ((Input.GetButtonUp("Throw") || !Input.GetButton("Throw")) && throwing && pressedQ)
         {
+            if (!smallCharge && !bigCharge)
+                smallThrow = true;
+
             if (canThrowCo != null)
                 StopCoroutine(canThrowCo);
             canThrowCo = StartCoroutine(ThrowCooldown());
             throwChargeTimer = 0;
+            pressedQ = false;
 
-            ThrowObject();
+            ThrowObject(1, inventoryUI.selectedSlot, true);
             throwing = false;
             throwRelease = true;
         }
@@ -528,16 +577,16 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void ThrowObject()
+    public void ThrowObject(int count, int slotID, bool isSingleThrow)
     {
-        if(inventoryUI.rightHandObject != null)
+        if (inventory.visableInventoryQuantity[slotID] > 0)
         {
             if (!smallCharge && !bigCharge)
-                StartCoroutine(ThrowDelay(smallThrowDelay, 1));
+                StartCoroutine(ThrowDelay(smallThrowDelay, 1, count, slotID, isSingleThrow));
             else if (smallCharge && !bigCharge)
-                StartCoroutine(ThrowDelay(medThrowDelay, medThrowForceMultiplier));
+                StartCoroutine(ThrowDelay(medThrowDelay, medThrowForceMultiplier, count, slotID, isSingleThrow));
             else if (bigCharge)
-                StartCoroutine(ThrowDelay(maxThrowDelay, bigThrowForceMultiplier));
+                StartCoroutine(ThrowDelay(maxThrowDelay, bigThrowForceMultiplier, count, slotID, isSingleThrow));
         }
     }
 
@@ -556,32 +605,59 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator ThrowCooldown()
     {
+        
         canThrow = false;
         yield return new WaitForSeconds(shortThrowDelay);
         canThrow = true;
+        smallThrow = false;
     }
 
-    IEnumerator ThrowDelay(float delay, float multiplier)
+    IEnumerator ThrowDelay(float delay, float multiplier, int count, int slotID, bool isSingleThrow)
     {
+        throwing = true;
         yield return new WaitForSeconds(delay);
-        if (inventory.RetrieveGameObjectByName(inventory.visableInventory[inventoryUI.selectedSlot]) != null)
+        if (inventory.RetrieveGameObjectByName(inventory.visableInventory[slotID]) != null)
         {
-            GameObject item = Instantiate(inventory.RetrieveGameObjectByName(inventory.visableInventory[inventoryUI.selectedSlot]),
-            inventoryUI.rightHandObject.transform.position, inventoryUI.rightHandObject.transform.rotation);
-            inventory.visableInventoryQuantity[inventoryUI.selectedSlot]--;
-            item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Continuous;
-  
+            for (int i = 0; i < count; i++)
+            {
+                GameObject item = Instantiate(inventory.RetrieveGameObjectByName(inventory.visableInventory[slotID]),
+                rightHand.transform.position, Quaternion.identity);
+                inventory.visableInventoryQuantity[slotID]--;
+                item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-            if(multiplier == 1 || !cameraControls.camClose)
-                item.GetComponent<Rigidbody>().AddForce(transform.forward * throwForce * multiplier);
-            else
-                item.GetComponent<Rigidbody>().AddForce(cam.transform.forward.normalized * throwForce * multiplier);
 
-            if (multiplier == 1)
-                item.GetComponent<DamageGiver>().dontGiveDamage = true;
+                if (!isSingleThrow)
+                {
+                    multiplier = 1;
+                    item.layer = 18;
+                }
 
-            item.GetComponent<DamageGiver>().overrideSpeedThreshold = true;
-            item.GetComponent<DamageGiver>().overriddenSpeedThreshold = thrownObjectOverrideSpeedThreshold;
+                if (multiplier == 1 || !cameraControls.camClose || !isSingleThrow)
+                    item.GetComponent<Rigidbody>().AddForce(transform.forward * throwForce * multiplier);
+                else
+                    item.GetComponent<Rigidbody>().AddForce(cam.transform.forward.normalized * throwForce * multiplier);
+
+                if (multiplier == 1)
+                {
+                    item.GetComponent<DamageGiver>().dontGiveDamage = true;
+                    smallThrow = true;
+                    StartCoroutine(ThrowCooldown());
+                }
+
+                item.GetComponent<DamageGiver>().overrideSpeedThreshold = true;
+                item.GetComponent<DamageGiver>().overriddenSpeedThreshold = thrownObjectOverrideSpeedThreshold;
+
+                if (i % 50 == 0)
+                    yield return null;
+            }
+        }
+
+        if (!isSingleThrow) //Threw by dragging item ui into scene
+        {
+            throwing = false;
+            smallCharge = false;
+            bigCharge = false;
+            throwChargeTimer = 0f;
         }
     }
 

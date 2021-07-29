@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class DamageGiver : MonoBehaviour
 {
+    public TrailRenderer[] trails;
+    Coroutine trailCo;
+    bool canDisableTrail = true;
+    public float trailOffDelay;
     public string[] damageTags;
     public float dph;
     public float speed;
@@ -25,4 +29,35 @@ public class DamageGiver : MonoBehaviour
         if (dpsDependsOnSpeed)
             dph = speed * dphSpeedMultiplier;
     }
+
+    private void Update()
+    {
+        if(trails.Length > 0)
+        {
+            if (!dontGiveDamage && !trails[0].emitting)
+            {
+                for (int i = 0; i < trails.Length; i++)
+                    trails[i].emitting = true;
+                
+            }
+
+            if (dontGiveDamage && trails[0].emitting && canDisableTrail)
+            {
+                if (trailCo != null)
+                    StopCoroutine(trailCo);
+                trailCo = StartCoroutine(DelayTrailOff());
+            }
+        }
+
+    }
+
+    IEnumerator DelayTrailOff()
+    {
+        canDisableTrail = false;
+        yield return new WaitForSeconds(trailOffDelay);
+        for (int i = 0; i < trails.Length; i++)
+            trails[i].emitting = false;
+        canDisableTrail = true;
+    }
+
 }

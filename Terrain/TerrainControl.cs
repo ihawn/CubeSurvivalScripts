@@ -7,47 +7,60 @@ public class TerrainControl : MonoBehaviour
 {
     public bool shouldGenerate, doneGenerating;
     public GameObject[] wallCubes, meadowCubes, beachAndOceanCubes, darkForestCubes, rockyBeachCubes, jungleCubes, desertCubes, oceanCubes;
-    GameObject[][] cubes;
+    public GameObject[][] cubes;
     public GameObject player;
     public StaticGenerator[] sg;
     public float terrainDrawDistance, verticalOffset, terrainRiseSpeed, popupDistance, falloff, power;
     public int cubesPerFrame;
     public float globalCubeWidth, seaLevel;
     public bool[] completedGeneration;
+    public int completedJobs = 0;
 
 
-    public bool shouldUpdate;
-    public float closeThreshold;
-    public int closeCubesPerFrame, farCubesPerFrame;
-    List<GameObject> closeCubes = new List<GameObject>();
-    List<GameObject> farCubes = new List<GameObject>();
+    public int cubeCount;
+    public GameObject closestCube;
+
+    public GameObject[] allCubes;
+
+    public int proximityLevels = 6;
 
     private void Awake()
     {
-        cubes = new GameObject[sg.Length + 1][];
-        cubes[0] = wallCubes;
-        cubes[1] = meadowCubes;
-        cubes[2] = beachAndOceanCubes;
+
+        cubes = new GameObject[1][]; //new GameObject[sg.Length + 1][];
+        //cubes[0] = wallCubes;
+        cubes[0] = meadowCubes;//cubes[1] = meadowCubes;
+       /*cubes[2] = beachAndOceanCubes;
         cubes[3] = darkForestCubes;
         cubes[4] = rockyBeachCubes;
         cubes[5] = jungleCubes;
         cubes[6] = desertCubes;
-        cubes[7] = oceanCubes;
+        cubes[7] = oceanCubes;*/
 
-
-        int len = 0;
-
-        for (int i = 0; i < cubes.Length; i++)
-            len += cubes[i].Length;
-
-        InitializeCubeLists();
-        StartCoroutine(UpdateFarCubes());
-        StartCoroutine(UpdateCloseCubes());
 
         completedGeneration = new bool[sg.Length];
 
         for (int i = 0; i < completedGeneration.Length; i++)
             completedGeneration[i] = false;
+
+        cubeCount = 0;
+        for (int i = 0; i < cubes.Length; i++)
+            cubeCount += cubes[i].Length;
+
+        allCubes = new GameObject[cubeCount];
+        int k = 0;
+        for (int i = 0; i < cubes.Length; i++)
+        {
+            for (int j = 0; j < cubes[i].Length; j++)
+            {
+                allCubes[k] = cubes[i][j];
+                allCubes[k].GetComponent<TerrainCubeControler>().cubeID = k;
+                k++;
+            }
+        }
+
+        //Get focal point cube
+        closestCube = GetStandingCube(allCubes);
 
     }
 
@@ -57,75 +70,39 @@ public class TerrainControl : MonoBehaviour
         if (!doneGenerating)
             doneGenerating = CheckForGenerationCompletion();
 
-        UpdateCubes(closeCubes);
+        closestCube = GetStandingCube(closestCube.GetComponent<TerrainCubeControler>().closestCubes);
+        UpdateCubes(closestCube.GetComponent<TerrainCubeControler>().closestCubes);
     }
 
-    public void InitializeCubeLists()
+    public GameObject GetStandingCube(GameObject[] arr)
     {
-        closeCubes.Clear();
-        farCubes.Clear();
+        float min = Mathf.Infinity;
+        GameObject minObj = arr[0];
 
-        for (int i = 0; i < cubes.Length; i++)
+        for(int i = 0; i < arr.Length; i++)
         {
-            for(int j = 0; j < cubes[i].Length; j++)
+            float dist = BirdsEyeDistance(arr[i], player);
+            if (dist < min)
             {
-                if (BirdsEyeDistance(cubes[i][j], player) <= closeThreshold)
-                    closeCubes.Add(cubes[i][j]);
-                else
-                    farCubes.Add(cubes[i][j]);
-                
+                min = dist;
+                minObj = arr[i];
             }
         }
+
+        return minObj;
     }
 
-    IEnumerator UpdateFarCubes()
-    {
-        while (shouldUpdate)
-        {
-            for (int i = 0; i < farCubes.Count; i++)
-            {
-                if (BirdsEyeDistance(farCubes[i], player) <= closeThreshold)
-                {
-                    GameObject temp = farCubes[i];
-                    farCubes.Remove(farCubes[i]);
-                    closeCubes.Add(temp);
-                }
 
-                if (i % farCubesPerFrame == 0)
-                    yield return null;
-            }
-        }
-    }
-
-    IEnumerator UpdateCloseCubes()
-    {
-        while(shouldUpdate)
-        {
-            for(int i = 0; i < closeCubes.Count; i++)
-            {
-                if(BirdsEyeDistance(closeCubes[i], player) > closeThreshold)
-                {
-                    GameObject temp = closeCubes[i];
-                    closeCubes.Remove(closeCubes[i]);
-                    farCubes.Add(temp);
-                }
-
-                if (i % closeCubesPerFrame == 0)
-                    yield return null;
-            }
-        }
-    }
-
-    float BirdsEyeDistance(GameObject p, GameObject c)
+    public float BirdsEyeDistance(GameObject p, GameObject c)
     {
         return Vector2.Distance(new Vector2(p.transform.position.x, p.transform.position.z), new Vector2(c.transform.position.x, c.transform.position.z));
     }
 
 
 
-    void UpdateCubes(List<GameObject> cubes)
+    void UpdateCubes(GameObject[] cubes)
     {
-        for (int i = 0; i < cubes.Count; i++)
+        for (int i = 0; i < cubes.Length; i++)
         {
             if (!cubes[i].activeInHierarchy &&
                 Vector2.Distance(new Vector2(player.transform.position.x, player.transform.position.z),

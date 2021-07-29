@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class DamageTaker : MonoBehaviour
 {
-    public float hp, maxHp, toughness, damageTick;
+    public GameObject debrisParticles;
+
+    public float hp, maxHp, toughness, damageTick = 0.4f;
     public bool takeContinuousDamage;
     public bool canTakeDamage, hpBasedOnSize, hasDebris;
     public int id;
@@ -12,6 +14,7 @@ public class DamageTaker : MonoBehaviour
     public GameObject[] dropOnDeath;
     public float[] dropProbOnDeath;
     public float[] dropMultOnDeath;
+    public bool[] allOrNothing;
 
     public float damageSpeedThreshold = 8f, healthBarOffset, deathParticleSizeMultiplier, dropRateSizeMultiplier;
 
@@ -22,6 +25,9 @@ public class DamageTaker : MonoBehaviour
 
     private void Start()
     {
+        if (debrisParticles == null)
+            debrisParticles = StaticObjects.player.debrisParticles;
+
         startScale = transform.localScale.x;
 
         if (hpBasedOnSize)
@@ -60,8 +66,6 @@ public class DamageTaker : MonoBehaviour
     void Damage(GameObject hit, Vector3 hitPoint)
     {
 
-        if (hit.gameObject.GetComponent<DamageGiver>() != null)
-            print("Damage");
 
         if (canTakeDamage && hit.gameObject.GetComponent<DamageGiver>() != null &&
             ((hit.GetComponent<DamageGiver>().speed >= damageSpeedThreshold && !hit.GetComponent<DamageGiver>().overrideSpeedThreshold) || 
@@ -81,7 +85,7 @@ public class DamageTaker : MonoBehaviour
             {
                 Vector3 debrisDirection = (hit.gameObject.transform.position - transform.position).normalized*360f;
                 Quaternion debRot = Quaternion.Euler(debrisDirection + new Vector3(0f, 90f, 0f));
-                GameObject debris = Instantiate(StaticObjects.player.debrisParticles, hitPoint, debRot);
+                GameObject debris = Instantiate(debrisParticles, hitPoint, debRot);
             }
 
             if(hasScaleAnimation)

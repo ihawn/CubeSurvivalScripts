@@ -17,9 +17,13 @@ public class Inventory : MonoBehaviour
     {
         InitializeInventory();
         GiveItem("Limestone", 10);
-        GiveItem("Quartz", 100);
+        GiveItem("Raspberry", 128);
         GiveItem("OakWood", 50);
         GiveItem("IronAxe", 1);
+        GiveItem("Acorn", 128);
+        GiveItem("BirchSeed", 128);
+        GiveItem("BirchWood", 100);
+        GiveItem("ShortSword", 1);
   //      GiveItem("ObsidianKey", 10);
     }
 

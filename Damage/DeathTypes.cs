@@ -11,26 +11,44 @@ public static class DeathTypes
             case 0:
                 RockDeath(dt);
                 break;
+
+            case 1:
+                TreeDeath(dt);
+                break;
         }
+
+
     }
 
     static void RockDeath(DamageTaker dt)
     {
+        DeathWithDrop(dt);
+    }
+    
+    static void TreeDeath(DamageTaker dt)
+    {
+        DeathWithDrop(dt);
+    }
+
+    static void DeathWithDrop(DamageTaker dt)
+    {
         Vector3 bounds = dt.gameObject.GetComponent<MeshRenderer>().bounds.size;
 
-        for(int i = 0; i < dt.dropOnDeath.Length; i++)
+        for (int i = 0; i < dt.dropOnDeath.Length; i++)
         {
-            for(int j = 0; j < dt.dropMultOnDeath[i]*dt.dropRateSizeMultiplier*dt.GetComponent<MeshRenderer>().bounds.size.magnitude; j++)
+            for (int j = 0; j < dt.dropMultOnDeath[i] * dt.dropRateSizeMultiplier * dt.GetComponent<MeshRenderer>().bounds.size.magnitude; j++)
             {
-                if(Random.Range(0f,100f) <= dt.dropProbOnDeath[i])
+                if (Random.Range(0f, 100f) <= dt.dropProbOnDeath[i])
                 {
                     GameObject drop = GameObject.Instantiate(dt.dropOnDeath[i], dt.transform.position + new Vector3(Random.Range(-bounds.x / 2, bounds.x / 2), Random.Range(-bounds.y / 2, bounds.y / 2), Random.Range(-bounds.z / 2, bounds.z / 2)), Quaternion.identity);
+                    drop.transform.eulerAngles = new Vector3(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
+
                 }
             }
         }
 
         GameObject part = GameObject.Instantiate(StaticObjects.gm.dustCloud, dt.transform.position, Quaternion.identity);
-        part.transform.localScale = dt.GetComponent<MeshRenderer>().bounds.size.magnitude * dt.deathParticleSizeMultiplier*Vector3.one;
+        part.transform.localScale = dt.GetComponent<MeshRenderer>().bounds.size.magnitude * dt.deathParticleSizeMultiplier * Vector3.one;
 
         GameObject.Destroy(dt.gameObject);
     }

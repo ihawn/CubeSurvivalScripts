@@ -52,7 +52,7 @@ public class InventoryUI : MonoBehaviour
         for (int i = 0; i < playerInventory.visableInventorySize; i++)
         {
 
-            if (playerInventory.visableInventory[i] != null)
+            if (playerInventory.visableInventory[i] != null && playerInventory.visableInventoryQuantity[i] > 0)
             {
                 inventorySprites[i].sprite = playerInventory.CheckForItem(playerInventory.visableInventory[i]).icon;
                 inventorySprites[i].color = new Vector4(1f, 1f, 1f, 1f);
@@ -126,31 +126,39 @@ public class InventoryUI : MonoBehaviour
         }
         if(Input.GetMouseButtonUp(0))
         {
-            if(pressedSlot != null)
+            if (pressedSlot != null)
             {
-                GameObject newParent = ShortestDistance(pressedSlot.GetComponent<SlotController>().sprite, visableInventorySlots);              
-                pressedSlot.GetComponent<SlotController>().sprite.transform.position = newParent.transform.position;
-                pressedSlot.GetComponent<SlotController>().sprite.transform.SetParent(newParent.transform);
-                newParent.GetComponent<SlotController>().sprite.transform.position = pressedSlot.transform.position;
-                newParent.GetComponent<SlotController>().sprite.transform.SetParent(pressedSlot.transform);
-                GameObject temp = pressedSlot.GetComponent<SlotController>().sprite;
-                pressedSlot.GetComponent<SlotController>().sprite = newParent.GetComponent<SlotController>().sprite;
-                newParent.GetComponent<SlotController>().sprite = temp;
-                Image temp1_5 = inventorySprites[pressedSlot.GetComponent<SlotController>().slotID];
-                inventorySprites[pressedSlot.GetComponent<SlotController>().slotID] = inventorySprites[newParent.GetComponent<SlotController>().slotID];
-                inventorySprites[newParent.GetComponent<SlotController>().slotID] = temp1_5;
-                Text temp1_9 = inventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID];
-                inventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID] = inventoryQuantity[newParent.GetComponent<SlotController>().slotID];
-                inventoryQuantity[newParent.GetComponent<SlotController>().slotID] = temp1_9;
-                string temp2 = playerInventory.visableInventory[pressedSlot.GetComponent<SlotController>().slotID];
-                playerInventory.visableInventory[pressedSlot.GetComponent<SlotController>().slotID] = playerInventory.visableInventory[newParent.GetComponent<SlotController>().slotID];
-                playerInventory.visableInventory[newParent.GetComponent<SlotController>().slotID] = temp2;
-                int temp3 = playerInventory.visableInventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID];
-                playerInventory.visableInventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID] = playerInventory.visableInventoryQuantity[newParent.GetComponent<SlotController>().slotID];
-                playerInventory.visableInventoryQuantity[newParent.GetComponent<SlotController>().slotID] = temp3;
-                newParent.GetComponent<SlotController>().sprite.transform.SetSiblingIndex(0);
-            }
+                if (Mathf.Abs(pressedSlot.GetComponent<SlotController>().sprite.transform.position.x - pressedSlot.transform.position.x) < 150f)
+                {
+                    GameObject newParent = ShortestDistance(pressedSlot.GetComponent<SlotController>().sprite, visableInventorySlots);
+                    pressedSlot.GetComponent<SlotController>().sprite.transform.position = newParent.transform.position;
+                    pressedSlot.GetComponent<SlotController>().sprite.transform.SetParent(newParent.transform);
+                    newParent.GetComponent<SlotController>().sprite.transform.position = pressedSlot.transform.position;
+                    newParent.GetComponent<SlotController>().sprite.transform.SetParent(pressedSlot.transform);
+                    GameObject temp = pressedSlot.GetComponent<SlotController>().sprite;
+                    pressedSlot.GetComponent<SlotController>().sprite = newParent.GetComponent<SlotController>().sprite;
+                    newParent.GetComponent<SlotController>().sprite = temp;
+                    Image temp1_5 = inventorySprites[pressedSlot.GetComponent<SlotController>().slotID];
+                    inventorySprites[pressedSlot.GetComponent<SlotController>().slotID] = inventorySprites[newParent.GetComponent<SlotController>().slotID];
+                    inventorySprites[newParent.GetComponent<SlotController>().slotID] = temp1_5;
+                    Text temp1_9 = inventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID];
+                    inventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID] = inventoryQuantity[newParent.GetComponent<SlotController>().slotID];
+                    inventoryQuantity[newParent.GetComponent<SlotController>().slotID] = temp1_9;
+                    string temp2 = playerInventory.visableInventory[pressedSlot.GetComponent<SlotController>().slotID];
+                    playerInventory.visableInventory[pressedSlot.GetComponent<SlotController>().slotID] = playerInventory.visableInventory[newParent.GetComponent<SlotController>().slotID];
+                    playerInventory.visableInventory[newParent.GetComponent<SlotController>().slotID] = temp2;
+                    int temp3 = playerInventory.visableInventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID];
+                    playerInventory.visableInventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID] = playerInventory.visableInventoryQuantity[newParent.GetComponent<SlotController>().slotID];
+                    playerInventory.visableInventoryQuantity[newParent.GetComponent<SlotController>().slotID] = temp3;
+                    newParent.GetComponent<SlotController>().sprite.transform.SetSiblingIndex(0);
+                }
 
+                else
+                { 
+                    pressedSlot.GetComponent<SlotController>().sprite.transform.position = pressedSlot.transform.position;
+                    StaticObjects.player.ThrowObject(playerInventory.visableInventoryQuantity[pressedSlot.GetComponent<SlotController>().slotID], pressedSlot.GetComponent<SlotController>().slotID, false);
+                }
+            }
             pressedSlot = null;
         }
 
@@ -160,7 +168,7 @@ public class InventoryUI : MonoBehaviour
                 dragOffset = pressedSlot.transform.position - Input.mousePosition;
 
             Vector3 pos = Input.mousePosition + dragOffset;
-            pressedSlot.GetComponent<SlotController>().sprite.transform.position = new Vector3(pressedSlot.GetComponent<SlotController>().sprite.transform.position.x, pos.y, pressedSlot.GetComponent<SlotController>().sprite.transform.position.z);
+            pressedSlot.GetComponent<SlotController>().sprite.transform.position = new Vector3(pos.x, pos.y, pressedSlot.GetComponent<SlotController>().sprite.transform.position.z);
         }
     }
 
