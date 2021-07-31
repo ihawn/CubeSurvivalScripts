@@ -7,6 +7,10 @@ using Cinemachine;
 
 public class PlayerController : MonoBehaviour
 {
+    public DamageGiver currentDamager;
+    public ParticleSystem chargeFootDust;
+
+    CharacterController charCon;
     public CinemachineFreeLook closeCam;
 
     public Item currentSelection;
@@ -40,7 +44,14 @@ public class PlayerController : MonoBehaviour
 
     public string[] tagsConsideredGround;
     public bool running, grounded, groundedRaw, jump, sprinting, hasWeapon, melee,
-        shouldSlow, modifiedAttack, rolling, goingLeft, goingRight;
+        shouldSlow, modifiedAttack, rolling, goingLeft, goingRight, strongAttack,
+        chargingStrongAttack, strongAttackCharged, chargeAttack, moveCharging,
+        wasCharged;
+    public float timeToStrongCharge = 2f, strongAttackHitboxMultiplier = 5f, strongAttackDamageMultiplier = 3f;
+    float strongChargeTimer = 0f, chargeAttackSpeed;
+    public float chargeUppercutSpeed;
+    public VisualEffect chargingStrongAttackEffect;
+    public TrailRenderer dashTrail;
     int attackID = 0;
 
     public CharacterController controller;
@@ -82,7 +93,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-
+        charCon = GetComponent<CharacterController>();
         rightHandGrabber = GetComponent<Grabber>();
         inventory = GetComponent<Inventory>();
         LockCurser();
@@ -119,6 +130,14 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        hasWeapon = WeaponActive();
+
+
+        //Get current damager
+        if (hasWeapon && inventoryUI.rightHandObject.transform.childCount > 0)
+            currentDamager = inventoryUI.rightHandObject.transform.GetChild(0).gameObject.GetComponent<DamageGiver>();
+        else
+            currentDamager = rightHand.GetComponent<DamageGiver>();
 
         if(inventoryUI.rightHandObject != null)
         {
@@ -131,7 +150,7 @@ public class PlayerController : MonoBehaviour
             rightHandGrabber.lookObj = null;
         }
 
-        hasWeapon = WeaponActive();
+        
 
         try
         {
@@ -163,6 +182,7 @@ public class PlayerController : MonoBehaviour
         Movement(horizontalMove, verticalMove);
         UpdateAttackDamage();
         UpdateAttackCurves();
+        UpdateTrailActivity();
     }
 
     private void LateUpdate()
@@ -282,6 +302,7 @@ public class PlayerController : MonoBehaviour
 
     void KeyboardInput()
     {
+        //Move
         if (Input.GetKeyDown(KeyCode.A))
         {
             goingLeft = true;
@@ -303,28 +324,40 @@ public class PlayerController : MonoBehaviour
         verticalMove = Input.GetAxisRaw("Vertical");
         
 
+        //Sprint
         if (Input.GetKey(KeyCode.LeftShift))
             sprinting = true;
         else
             sprinting = false;
 
-         
+        
+        //Jump
         if (Input.GetKeyDown(KeyCode.Space) && grounded && !rolling && !modifiedAttack)
         {
             playerVelocity.y += Mathf.Sqrt(jumpHeight * -3.0f * gravity);
             jump = true;
         }
 
+        
+        //Secondary attack
         if (Input.GetMouseButton(1))
             modifiedAttack = true;
         else
             modifiedAttack = false;
 
+        //Roll
         if (Input.GetKeyDown(KeyCode.Space) && grounded && modifiedAttack)
         {
             StartCoroutine(DelayFalsify(0.2f));
             rolling = true;
         }
+
+
+        //Attack
+        if (Input.GetKeyDown(KeyCode.LeftControl))
+            strongAttack = true;
+        if(!Input.GetKey(KeyCode.LeftControl))
+            strongAttack = false;
 
         if(Input.GetMouseButtonDown(0) && !theUIController.inMenus)
         {
@@ -338,7 +371,10 @@ public class PlayerController : MonoBehaviour
 
             if (hasWeapon)
             {
-                
+                if(strongAttack)
+                {
+                    chargingStrongAttack = true;
+                }
             }
             else
             {
@@ -351,7 +387,93 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        if(Input.GetMouseButtonUp(0))
+        {
+            chargingStrongAttack = false;
+            chargingStrongAttackEffect.gameObject.SetActive(false);
+
+            //Release charge
+            if(strongAttackCharged)
+            {
+                strongAttack = true;
+            }
+        }
+
+
+        //Charging forward charge
+        if (chargingStrongAttack)
+        {
+            strongChargeTimer += Time.deltaTime;
+            chargingStrongAttackEffect.gameObject.SetActive(true);
+            chargingStrongAttackEffect.SetFloat("Charge", strongChargeTimer);
+        }
+        else
+            strongChargeTimer = 0f;
+
+
+
+        //Control charge attack animation speed
+        if (chargingStrongAttack)
+        {
+            //Pause while charging
+            if (anim.GetFloat("ChargeAnimFlow") > 0.05f)
+                chargeAttackSpeed = anim.GetFloat("ChargeAnimFlow");
+            else
+                chargeAttackSpeed = 0f;
+        }
+        if (!chargingStrongAttack && wasCharged)
+            chargeAttackSpeed = 2f * (anim.GetFloat("ChargeAnimFlow") + 0.1f);
+        else if (anim.GetCurrentAnimatorStateInfo(0).IsName("Uppercut") && !chargingStrongAttack && !strongAttack && !wasCharged)
+            chargeAttackSpeed = 1.9f;
+
+        if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Uppercut"))
+            wasCharged = false;
+
+        //Reset timer when not in uppercut animation since the speed of this animation depends on the timer value
+        if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Uppercut"))
+            strongChargeTimer = 0f;
+        else if (strongAttack && !moveCharging && !chargingStrongAttack && strongAttackCharged)
+            StartCoroutine(ChargeForward());
+
+        
+
+        if (strongChargeTimer > timeToStrongCharge)
+        {
+            strongAttackCharged = true;
+            wasCharged = true;
+            
+        }
+        else
+            strongAttackCharged = false;
+
         UpdateThrow();
+    }
+
+    IEnumerator ChargeForward()
+    {
+        float timer = 0;
+        moveCharging = true;
+
+        
+        Vector3 originalDamagerBounds = currentDamager.GetComponent<BoxCollider>().size;
+        float oldDamage = currentDamager.dph;
+        currentDamager.dph *= currentSelection.stats["CritDamageMult"]; ;
+        
+        while(timer < 1f)
+        {
+            //Enlarge weapon hitbox
+            currentDamager.GetComponent<BoxCollider>().size = originalDamagerBounds + Vector3.one * anim.GetFloat("MeleeCurve") * currentSelection.stats["CritHitboxMultiplier"];
+
+            //Move
+            charCon.Move(chargeUppercutSpeed * transform.forward * Time.deltaTime * anim.GetFloat("LocoCurve"));
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        currentDamager.GetComponent<BoxCollider>().size = originalDamagerBounds;
+        currentDamager.dph = oldDamage;
+
+        moveCharging = false;
     }
 
     IEnumerator Melee(float time)
@@ -436,7 +558,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("Sprint", sprinting);
         anim.SetBool("Melee", melee);
         anim.SetBool("ModifiedAttack", modifiedAttack);
-        anim.SetFloat("VerticalSpeed", GetComponent<CharacterController>().velocity.y);
+        anim.SetFloat("VerticalSpeed", charCon.velocity.y);
         anim.SetBool("SmallCharge", smallCharge);
         anim.SetBool("BigCharge", bigCharge);
         anim.SetBool("ThrowRelease", throwRelease);
@@ -447,6 +569,11 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("GoingLeft", goingLeft);
         anim.SetBool("HasWeapon", hasWeapon);
         anim.SetBool("SmallThrow", smallThrow);
+        anim.SetBool("ChargingStrongAttack", chargingStrongAttack);
+        anim.SetFloat("ChargeAnimSpeed", chargeAttackSpeed);
+        anim.SetBool("StrongAttack", strongAttack);
+        if (currentSelection.stats.ContainsKey("Weight"))
+            anim.SetFloat("WeaponSpeedMultiplier", 15f / currentSelection.stats["Weight"]);
     }
 
     void UpdateItemSlotInput()
@@ -588,6 +715,23 @@ public class PlayerController : MonoBehaviour
             else if (bigCharge)
                 StartCoroutine(ThrowDelay(maxThrowDelay, bigThrowForceMultiplier, count, slotID, isSingleThrow));
         }
+    }
+
+    void UpdateTrailActivity()
+    {
+        if (moveCharging)
+        {
+            dashTrail.emitting = true;
+            var emission = chargeFootDust.emission;
+            emission.rateOverTime = 16f;
+        }
+        else
+        {
+            dashTrail.emitting = false;
+            var emission = chargeFootDust.emission;
+            emission.rateOverTime = 0f;
+        }
+            
     }
 
     bool WeaponActive()

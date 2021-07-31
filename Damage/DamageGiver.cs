@@ -9,15 +9,26 @@ public class DamageGiver : MonoBehaviour
     bool canDisableTrail = true;
     public float trailOffDelay;
     public string[] damageTags;
+    public string itemName;
     public float dph;
     public float speed;
     Vector3 lastPos = Vector3.zero, currentPos = Vector3.zero;
     public bool dpsDependsOnSpeed, overrideSpeedThreshold, dontGiveDamage;
     public float dphSpeedMultiplier, overriddenSpeedThreshold;
 
+
+    private void Start()
+    {
+        try
+        {
+            dph = StaticObjects.player.GetComponent<Inventory>().ItemByName(itemName).stats["DPH"];
+        }
+        catch { }
+    }
+
     private void FixedUpdate()
     {
-        currentPos = transform.position;
+        currentPos = transform.position;      
 
         if(lastPos != Vector3.zero)
         {

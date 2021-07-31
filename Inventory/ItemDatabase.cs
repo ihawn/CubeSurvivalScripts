@@ -59,7 +59,11 @@ public class ItemDatabase : MonoBehaviour
                 {
                     {"Strength", 10 },
                     {"Durability", 10 },
-                    {"DPH", 10}
+                    {"Weight", 20},
+                    {"ChargeAreaMultiplier", 25},
+                    {"CritDamageMult", 25},
+                    {"CritHitboxMultiplier", 25},
+                    {"DPH", 50}
                 }),
 
                 new Item(5, generalStackSize/4, false, "Acorn", "The seed from a meadow oak. Could this grow if left on the ground?", inventoryIcons[5],
@@ -85,10 +89,14 @@ public class ItemDatabase : MonoBehaviour
                 {
                     { "Strength", 10 },
                     {"Durability", 10 },
-                    {"DPH", 10}
+                    {"Weight", 13},
+                    {"ChargeAreaMultiplier", 20},
+                    {"CritDamageMult", 10},
+                    {"CritHitboxMultiplier", 10},
+                    {"DPH", 40}
                 }),
 
-                new Item(8, generalStackSize/4, true, "Raspberry", "A juicy raspberry", inventoryIcons[9],
+                new Item(8, generalStackSize/4, false, "Raspberry", "A juicy raspberry", inventoryIcons[9],
                 new Dictionary<string, int>
                 {
                     { "Value", 100 }
