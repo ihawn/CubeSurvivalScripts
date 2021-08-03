@@ -14,6 +14,8 @@ public class PlantGrowth : MonoBehaviour
     public bool grounded, treeInstantly, growing;
     float timeToGrow;
 
+    public float minHeight;
+
     void Start()
     {
         gm = StaticObjects.gm;
@@ -60,7 +62,10 @@ public class PlantGrowth : MonoBehaviour
             float movementDelta = Mathf.Infinity;
             while (movementDelta > 0.1f*Time.deltaTime)
             {
-                plant.transform.parent = null;
+                if (plant != null && plant.transform.parent.gameObject != null)
+                    plant.transform.parent = null;
+                else
+                    break;
                 lastScale = currentScale;               
                 plant.transform.localScale = Vector3.Lerp(plant.transform.localScale, Vector3.one * endScale, growSpeed * Time.deltaTime);             
                 currentScale = plant.transform.localScale.x;
@@ -71,26 +76,26 @@ public class PlantGrowth : MonoBehaviour
             }
         }
 
-        plant.GetComponent<MeshCollider>().enabled = true;
+        if (plant != null)
+        {
+            plant.GetComponent<MeshCollider>().enabled = true;
 
-        plant.GetComponent<DamageTaker>().enabled = true;
-        plant.GetComponent<DamageTaker>().startScale = transform.localScale.x;
+            plant.GetComponent<DamageTaker>().enabled = true;
+            plant.GetComponent<DamageTaker>().startScale = transform.localScale.x;
+        }
 
         Destroy(gameObject);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.tag == "Ground")
+        if (collision.gameObject.tag == "Ground" && !growing && transform.position.y >= minHeight)
         {
-            if (!growing)
-            {
-                whatImGrowingOn = collision.gameObject;
-                grounded = true;
-                startTime = gm.time;
-                endTime = startTime + timeToGrow;
-                gm.growingSeeds.Add(this);
-            }
+            whatImGrowingOn = collision.gameObject;
+            grounded = true;
+            startTime = gm.time;
+            endTime = startTime + timeToGrow;
+            gm.growingSeeds.Add(this);
         }
     }
 
@@ -105,8 +110,8 @@ public class PlantGrowth : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (grounded && other.gameObject.tag != "Player" && other.gameObject.tag != "Ground" && !growing)
-            gm.growingSeeds.Remove(this);
+       /* if (grounded && other.gameObject.tag != "Player" && other.gameObject.tag != "Ground" && !growing)
+            gm.growingSeeds.Remove(this);*/
     }
 
 }

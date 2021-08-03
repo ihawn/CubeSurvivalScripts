@@ -53,8 +53,11 @@ public class HeathBarController : MonoBehaviour
 
         try
         {
-            transform.position = new Vector3(whoCreatedMe.transform.position.x, 0f, whoCreatedMe.transform.position.z) +
-            new Vector3(x, transform.position.y, z);
+            if(!float.IsNaN(whoCreatedMe.transform.position.x) && !float.IsNaN(x))
+            {
+                transform.position = new Vector3(whoCreatedMe.transform.position.x, 0f, whoCreatedMe.transform.position.z) +
+                new Vector3(x, transform.position.y, z);
+            }
         }
         catch { }
 

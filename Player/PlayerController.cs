@@ -7,8 +7,12 @@ using Cinemachine;
 
 public class PlayerController : MonoBehaviour
 {
+    public GameObject fog;
+
     public DamageGiver currentDamager;
     public ParticleSystem chargeFootDust;
+    public GameObject chargedFootQuake;
+    public Transform chargeFootDustPosition;
 
     CharacterController charCon;
     public CinemachineFreeLook closeCam;
@@ -131,6 +135,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         hasWeapon = WeaponActive();
+        fog.transform.position = new Vector3(transform.position.x, fog.transform.position.y, transform.position.z);
 
 
         //Get current damager
@@ -252,7 +257,7 @@ public class PlayerController : MonoBehaviour
         else
             speed = runSpeed;
 
-        if(smallCharge || bigCharge && !smallThrow)
+        if((smallCharge || bigCharge || chargingStrongAttack) && !smallThrow )
             transform.rotation = Quaternion.Euler(0f, cam.eulerAngles.y, 0f);
 
         if (direction.magnitude >= 0.1 && grounded && !shouldSlow)
@@ -439,6 +444,9 @@ public class PlayerController : MonoBehaviour
 
         if (strongChargeTimer > timeToStrongCharge)
         {
+            if (!wasCharged)
+                ChargedUpEffects();
+
             strongAttackCharged = true;
             wasCharged = true;
             
@@ -474,6 +482,12 @@ public class PlayerController : MonoBehaviour
         currentDamager.dph = oldDamage;
 
         moveCharging = false;
+    }
+
+    void ChargedUpEffects()
+    {
+        cameraControls.SetShake();
+        GameObject dustquake = Instantiate(chargedFootQuake, chargeFootDustPosition.position, chargeFootDustPosition.rotation);;
     }
 
     IEnumerator Melee(float time)

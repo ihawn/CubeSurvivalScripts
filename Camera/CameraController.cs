@@ -9,8 +9,11 @@ public class CameraController : MonoBehaviour
     public CinemachineFreeLook freeLookCamera;
     public CinemachineFreeLook aimCam;
     public PlayerController player;
+    public CinemachineImpulseSource playerChargeImpulse;
     public Camera cam;
     public bool camClose = true;
+
+
 
     public void ToggleViewCamera()
     {
@@ -70,6 +73,11 @@ public class CameraController : MonoBehaviour
                 freeLookCamera.Priority = 1;
             }
         }
+    }
+
+    public void SetShake()
+    {
+        playerChargeImpulse.GenerateImpulse();
     }
 
 }

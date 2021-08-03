@@ -27,11 +27,11 @@ public class TerrainControl : MonoBehaviour
     private void Awake()
     {
 
-        cubes = new GameObject[1][]; //new GameObject[sg.Length + 1][];
+        cubes = new GameObject[2][]; //new GameObject[sg.Length + 1][];
         //cubes[0] = wallCubes;
         cubes[0] = meadowCubes;//cubes[1] = meadowCubes;
-       /*cubes[2] = beachAndOceanCubes;
-        cubes[3] = darkForestCubes;
+        cubes[1] = beachAndOceanCubes;//cubes[2] = beachAndOceanCubes;
+        /*cubes[3] = darkForestCubes;
         cubes[4] = rockyBeachCubes;
         cubes[5] = jungleCubes;
         cubes[6] = desertCubes;
