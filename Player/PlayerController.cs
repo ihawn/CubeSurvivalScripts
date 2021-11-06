@@ -586,7 +586,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("ChargingStrongAttack", chargingStrongAttack);
         anim.SetFloat("ChargeAnimSpeed", chargeAttackSpeed);
         anim.SetBool("StrongAttack", strongAttack);
-        if (currentSelection.stats.ContainsKey("Weight"))
+        if (currentSelection != null && currentSelection.stats.ContainsKey("Weight"))
             anim.SetFloat("WeaponSpeedMultiplier", 15f / currentSelection.stats["Weight"]);
     }
 

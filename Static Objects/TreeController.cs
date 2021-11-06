@@ -61,15 +61,9 @@ public class TreeController : MonoBehaviour
                 for(int i = 0; i < leafDrops.Length; i++)
                 {
                     leafDrops[i].gameObject.SetActive(true);
-                    leafDrops[i].transform.parent = deadTree.transform;
+                    leafDrops[i].transform.parent = null;
                 }
             }
-        }
-
-
-        if(hasEffects)
-        {
-            //Effects like dust and other effects to obsure the transition
         }
 
         Destroy(gameObject);
